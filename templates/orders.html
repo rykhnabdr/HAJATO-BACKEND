@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="content">
+    <div class="page-header">
+        <h1 class="page-title">Order Management</h1>
+        <p class="text-muted">Track and update all incoming and ongoing orders.</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">Order List</h3>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Vendor</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#ORD-2026</td>
+                        <td>Budi Santoso</td>
+                        <td>Katering Harmoni</td>
+                        <td>24 Apr 2026</td>
+                        <td>Rp 15.000.000</td>
+                        <td><span class="status-badge status-completed">Completed</span></td>
+                        <td><button class="action-btn"><i class='bx bx-show'></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+{% endblock %}

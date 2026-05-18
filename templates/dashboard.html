@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="content">
+    <div class="page-header">
+        <h1 class="page-title">Dashboard Overview</h1>
+        <p class="text-muted">Welcome back! Here's what's happening today.</p>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+        <div class="glass-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.total_vendors }}</div>
+                    <div class="stat-label">Total Vendors</div>
+                </div>
+                <div class="stat-icon icon-orange">
+                    <i class='bx bx-store-alt'></i>
+                </div>
+            </div>
+            <div class="stat-trend trend-up">
+                <i class='bx bx-trending-up'></i> +12% from last month
+            </div>
+        </div>
+        
+        <div class="glass-card">
+    <div class="stat-header">
+        <div>
+            <div class="stat-value">{{ stats.rejected_vendors }}</div>
+            <div class="stat-label">Rejected Vendors</div>
+        </div>
+        <div class="stat-icon icon-blue">
+            <i class='bx bx-x-circle'></i>
+        </div>
+    </div>
+    <div class="stat-trend trend-down">
+        Vendor ditolak
+    </div>
+</div>
+
+        <div class="glass-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.pending_approvals }}</div>
+                    <div class="stat-label">Pending Approvals</div>
+                </div>
+                <div class="stat-icon icon-green" style="background: rgba(234, 179, 8, 0.1); color: #eab308;">
+                    <i class='bx bx-time'></i>
+                </div>
+            </div>
+            <div class="stat-trend trend-down" style="color: var(--text-muted);">
+                Needs Verification
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.active_users }}</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+                <div class="stat-icon icon-purple">
+                    <i class='bx bx-group'></i>
+                </div>
+            </div>
+            <div class="stat-trend trend-down">
+                <i class='bx bx-trending-down'></i> -2% from last month
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS GRID -->
+    <div class="charts-grid">
+        <div class="glass-card">
+            <div class="card-header">
+                <h3 class="card-title">User Growth Analytics</h3>
+                <button class="action-btn"><i class='bx bx-dots-vertical-rounded'></i></button>
+            </div>
+            <div class="chart-container">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+        <div class="glass-card">
+            <div class="card-header">
+                <h3 class="card-title">Total User</h3>
+                <button class="action-btn"><i class='bx bx-dots-vertical-rounded'></i></button>
+            </div>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+    <!-- PENDING VENDORS TABLE -->
+    <div class="glass-card" style="margin-top: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">Pending Vendor Approvals</h3>
+            <a href="{{ url_for('vendors') }}" class="text-primary" style="text-decoration: none; font-size: 0.9rem;">View All Vendors</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vendor ID</th>
+                        <th>Vendor Name</th>
+                        <th>Category</th>
+                        <th>Contact Email</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vendor in pending_vendors %}
+                    <tr>
+                        <td>#VND-{{ vendor.id }}</td>
+                        <td>
+                            <div class="vendor-cell">
+                                <div class="vendor-avatar" style="background: rgba(255, 122, 0, 0.2); color: var(--primary-color);">{{ vendor.name[0]|upper }}</div>
+                                <span>{{ vendor.name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ vendor.category }}</td>
+                        <td><span style="color: var(--text-muted);">{{ vendor.email or '-' }}</span></td>
+                        <td><span class="status-badge status-pending" style="background: rgba(234, 179, 8, 0.2); color: #eab308;">{{ vendor.status }}</span></td>
+                        <td>
+                            <form action="/vendors/approve/{{ vendor.id }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-btn" title="Approve" style="color: #22c55e;"><i class='bx bx-check-circle'></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                        <i class='bx bx-check-shield' style="font-size: 2rem; color: #2eac6d; margin-bottom: 10px; display: block;"></i>
+                        Hore! Semua pendaftaran vendor sudah diverifikasi.
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<!-- Hidden div to hold data safely for Javascript parsing -->
+<div id="chartDataContainer" style="display: none;" 
+     data-growth-labels="{{ growth_labels | tojson | forceescape }}"
+     data-growth-values="{{ growth_values | tojson | forceescape }}"
+     data-cat-labels="{{ cat_labels | tojson | forceescape }}"
+     data-cat-values="{{ cat_values | tojson | forceescape }}">
+</div>
+
+<script>
+    // Safely parse data from the hidden div to prevent IDE syntax errors
+    const chartDataEl = document.getElementById('chartDataContainer');
+    const growthLabels = JSON.parse(chartDataEl.dataset.growthLabels);
+    const growthValues = JSON.parse(chartDataEl.dataset.growthValues);
+    const catLabels = JSON.parse(chartDataEl.dataset.catLabels);
+    const catValues = JSON.parse(chartDataEl.dataset.catValues);
+    // Chart text color config for dark theme
+    Chart.defaults.color = '#8c909e';
+    Chart.defaults.font.family = 'Outfit, sans-serif';
+
+    // Growth Line Chart
+    const growthCtx = document.getElementById('growthChart').getContext('2d');
+    new Chart(growthCtx, {
+        type: 'line',
+        data: {
+            labels: growthLabels,
+            datasets: [{
+                label: 'New Users',
+                data: growthValues,
+                borderColor: '#FF7A00',
+                backgroundColor: 'rgba(255, 122, 0, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#0f1115',
+                pointBorderColor: '#FF7A00',
+                pointBorderWidth: 2,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }
+                },
+                x: {
+                    grid: { display: false, drawBorder: false }
+                }
+            }
+        }
+    });
+
+    // Category Doughnut Chart
+    const catCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(catCtx, {
+        type: 'doughnut',
+        data: {
+            labels: catLabels,
+            datasets: [{
+                data: catValues,
+                backgroundColor: [
+                    '#3b82f6',
+                    '#FF7A00',
+                    '#2eac6d',
+                    '#8b5cf6',
+                    '#ec4899',
+                    '#eab308',
+                    '#14b8a6',
+                    '#f43f5e'
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

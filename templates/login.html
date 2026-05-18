@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Hajato Admin</title>
+
+    <!-- GOOGLE FONTS -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="split-layout">
+
+    <!-- LEFT -->
+    <div class="layout-left">
+
+        <div class="left-overlay"></div>
+
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+
+        <div class="brand-content">
+
+            <h1 class="brand-title">Hajato</h1>
+
+            <p class="brand-subtitle">
+                Elevating Event Management.
+            </p>
+
+            <p class="brand-description">
+                Solusi terintegrasi untuk manajemen vendor hajatan
+                yang profesional, efisien, dan modern.
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="layout-right">
+
+        <div class="login-wrapper">
+
+            <div class="login-header">
+
+                <h2>Welcome Back</h2>
+
+                <p>Silakan masuk ke panel admin</p>
+
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form class="login-form" method="POST" action="/login">
+
+
+                <!-- EMAIL -->
+                <div class="input-container">
+
+                    <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        required
+                        placeholder=" "
+                    >
+
+                    <label for="email">Email</label>
+
+                    <div class="input-highlight"></div>
+
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="input-container">
+
+                    <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        required
+                        placeholder=" "
+                    >
+
+                    <label for="password">Password</label>
+
+                    <div class="input-highlight"></div>
+
+                </div>
+
+                <!-- BUTTON -->
+                <div class="form-actions">
+
+                    <button type="submit" class="btn-login">
+
+                        <span class="btn-text">
+                            Log In
+                        </span>
+
+                        <span class="btn-icon">
+                            →
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+            <div class="login-footer">
+
+                <p>
+                    &copy; 2026 Hajato System.
+                    All rights reserved.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- LOGIN SCRIPT -->
+<!-- Tidak ada script fetch/login lagi karena POST /login melakukan redirect server-side -->
+
+
+</body>
+</html>
+

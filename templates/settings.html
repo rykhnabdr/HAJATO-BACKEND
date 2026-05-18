@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="content">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="page-title">Admin Management</h1>
+            <p class="text-muted">Manage system administrators (Add, Edit, Delete).</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddModal()" style="padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+            <i class='bx bx-plus'></i> Add New Admin
+        </button>
+    </div>
+
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">Registered Admins</h3>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Admin ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                    <tr>
+                        <td>#ADM-{{ admin.id }}</td>
+                        <td>
+                            <div class="vendor-cell">
+                                <div class="vendor-avatar" style="background: rgba(255, 122, 0, 0.2); color: var(--primary-color);">{{ admin.username[0]|upper }}</div>
+                                <span>{{ admin.username }}</span>
+                            </div>
+                        </td>
+                        <td><span style="color: var(--text-muted); font-size: 0.9rem;">{{ admin.email }}</span></td>
+                        <td><span class="status-badge status-completed">Superadmin</span></td>
+                        <td style="display: flex; gap: 8px;">
+                            <button type="button" class="action-btn" title="Edit" onclick="openEditModal({{ admin.id }}, '{{ admin.username|replace("'", "\\'") }}', '{{ admin.email|replace("'", "\\'") }}')">
+                                <i class='bx bx-edit'></i>
+                            </button>
+                            
+                            <form action="/settings/admin/delete/{{ admin.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this admin account?');">
+                                <button type="submit" class="action-btn" title="Delete" style="color: #ef4444;"><i class='bx bx-trash'></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Add Admin Modal -->
+<div id="addAdminModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="glass-card" style="width: 400px; padding: 24px; position: relative;">
+        <button onclick="closeAddModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem;"><i class='bx bx-x'></i></button>
+        <h3 style="margin-bottom: 20px;">Add New Admin</h3>
+        <form method="POST" action="/settings/admin/add">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #9ca3af;">Username</label>
+                <input type="text" name="username" required style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #9ca3af;">Email</label>
+                <input type="email" name="email" required style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #9ca3af;">Password</label>
+                <input type="password" name="password" required style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+            </div>
+            <button type="submit" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Create Admin</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Admin Modal -->
+<div id="editAdminModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="glass-card" style="width: 400px; padding: 24px; position: relative;">
+        <button onclick="closeEditModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem;"><i class='bx bx-x'></i></button>
+        <h3 style="margin-bottom: 20px;">Edit Admin</h3>
+        <form id="editAdminForm" method="POST" action="">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #9ca3af;">Username</label>
+                <input type="text" id="editUsername" name="username" required style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #9ca3af;">Email</label>
+                <input type="email" id="editEmail" name="email" required style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #9ca3af;">New Password <small>(Leave blank to keep current)</small></label>
+                <input type="password" id="editPassword" name="password" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+            </div>
+            <button type="submit" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAddModal() {
+        document.getElementById('addAdminModal').style.display = 'flex';
+    }
+
+    function closeAddModal() {
+        document.getElementById('addAdminModal').style.display = 'none';
+    }
+
+    function openEditModal(id, username, email) {
+        document.getElementById('editAdminForm').action = '/settings/admin/edit/' + id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editPassword').value = ''; // clear password field
+        document.getElementById('editAdminModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editAdminModal').style.display = 'none';
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        var addModal = document.getElementById('addAdminModal');
+        var editModal = document.getElementById('editAdminModal');
+        if (event.target == addModal) {
+            closeAddModal();
+        }
+        if (event.target == editModal) {
+            closeEditModal();
+        }
+        
+        // Also handle the topbar dropdowns from base.html if they exist
+        if (!event.target.closest('.notification-wrapper') && !event.target.closest('.profile-wrapper')) {
+            var dropdowns = document.getElementsByClassName("dropdown-menu");
+            for (var i = 0; i < dropdowns.length; i++) {
+                dropdowns[i].style.display = 'none';
+            }
+        }
+    }
+</script>
+{% endblock %}

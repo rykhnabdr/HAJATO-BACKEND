@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="content">
+
+    <div class="page-header">
+        <h1 class="page-title">Vendor Management</h1>
+        <p class="text-muted">
+            Manage all registered vendors and their services.
+        </p>
+    </div>
+
+    <div class="glass-card">
+
+        <div class="card-header">
+            <h3 class="card-title">All Vendors</h3>
+
+            <div class="search-bar" style="width: 200px; padding: 4px 12px;">
+                <i class='bx bx-search'></i>
+                <input type="text" placeholder="Search..." style="font-size: 0.85rem;">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vendor ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for vendor in vendors %}
+                    <tr>
+                        <td>#VND-{{ vendor.id }}</td>
+
+                        <td>
+                            <div class="vendor-cell">
+                                <div class="vendor-avatar">
+                                    {{ vendor.name[0]|upper }}
+                                </div>
+                                <span>{{ vendor.name }}</span>
+                            </div>
+                        </td>
+
+                        <td>{{ vendor.category }}</td>
+
+                        <td>
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">
+                                {{ vendor.email }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if vendor.status == 'approved' %}
+                                <span class="status-badge status-completed">
+                                    Approved
+                                </span>
+                            {% elif vendor.status == 'pending' %}
+                                <span class="status-badge status-pending"
+                                      style="background: rgba(234, 179, 8, 0.2); color: #eab308;">
+                                    Pending
+                                </span>
+                            {% elif vendor.status == 'rejected' %}
+                                <span class="status-badge status-cancelled"
+                                      style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                                    Rejected
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td style="display:flex; gap:8px;">
+
+                            {% if vendor.status == 'pending' %}
+
+                            <form action="/vendors/approve/{{ vendor.id }}"
+                                  method="POST"
+                                  style="display:inline;">
+                                <button type="submit"
+                                        class="action-btn"
+                                        title="Approve"
+                                        style="color:#22c55e;">
+                                    <i class='bx bx-check-circle'></i>
+                                </button>
+                            </form>
+
+                            <form action="/vendors/reject/{{ vendor.id }}"
+                                  method="POST"
+                                  style="display:inline;">
+                                <button type="submit"
+                                        class="action-btn"
+                                        title="Reject"
+                                        style="color:#ef4444;">
+                                    <i class='bx bx-x-circle'></i>
+                                </button>
+                            </form>
+
+                            {% endif %}
+
+                            <button type="button"
+        class="action-btn"
+        title="View Detail"
+        onclick="openViewModal(
+            '{{ vendor.name }}',
+            '{{ vendor.email }}',
+            '{{ vendor.owner_name }}',
+            '{{ vendor.phone }}',
+            '{{ vendor.location }}',
+            '{{ vendor.description }}',
+            '{{ vendor.nik }}',
+            '{{ vendor.npwp }}',
+            '{{ vendor.ktp_image }}',
+            '{{ vendor.selfie_image }}',
+            '{{ vendor.business_license }}'
+        )">
+    <i class='bx bx-show'></i>
+</button>
+
+                            <button type="button"
+        class="action-btn"
+        title="Edit"
+        onclick="openEditModal(
+            '{{ vendor.id }}',
+            '{{ vendor.name }}',
+            '{{ vendor.category }}',
+            '{{ vendor.status }}'
+        )">
+    <i class='bx bx-edit'></i>
+</button>
+
+                            <form action="/vendors/delete/{{ vendor.id }}"
+                                  method="POST"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Delete vendor?');">
+                                <button type="submit"
+                                        class="action-btn"
+                                        title="Delete"
+                                        style="color:#ef4444;">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </form>
+
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="6"
+                            style="text-align:center; padding:30px; color:var(--text-muted);">
+                            Belum ada vendor terdaftar.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</main>
+
+<!-- VIEW MODAL -->
+<div id="viewVendorModal"
+     class="modal"
+     style="
+        display:none;
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background:rgba(0,0,0,0.6);
+        z-index:2000;
+        justify-content:center;
+        align-items:center;
+     ">
+
+    <div class="glass-card"
+         style="
+            width:760px;
+            max-height:90vh;
+            overflow-y:auto;
+            padding:24px;
+            position:relative;
+         ">
+
+        <button onclick="closeViewModal()"
+                style="
+                    position:absolute;
+                    top:16px;
+                    right:16px;
+                    background:none;
+                    border:none;
+                    color:white;
+                    font-size:1.5rem;
+                    cursor:pointer;
+                ">
+            <i class='bx bx-x'></i>
+        </button>
+
+        <h2 style="margin-bottom:20px;">
+            Vendor Detail
+        </h2>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+
+            <div>
+                <b>Business Name:</b><br>
+                <span id="viewName"></span>
+            </div>
+
+            <div>
+                <b>Email:</b><br>
+                <span id="viewEmail"></span>
+            </div>
+
+            <div>
+                <b>Owner Name:</b><br>
+                <span id="viewOwner"></span>
+            </div>
+
+            <div>
+                <b>Phone:</b><br>
+                <span id="viewPhone"></span>
+            </div>
+
+            <div>
+                <b>Location:</b><br>
+                <span id="viewLocation"></span>
+            </div>
+
+            <div>
+                <b>NIK:</b><br>
+                <span id="viewNik"></span>
+            </div>
+
+            <div>
+                <b>NPWP:</b><br>
+                <span id="viewNpwp"></span>
+            </div>
+
+            <div style="grid-column:1 / 3;">
+                <b>Description:</b><br>
+                <span id="viewDescription"></span>
+            </div>
+
+        </div>
+
+        <hr style="margin:20px 0;">
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+
+            <div>
+                <h3 style="margin-bottom:10px;">KTP</h3>
+                <img id="viewKtp"
+                     src=""
+                     style="
+                        width:100%;
+                        max-height:220px;
+                        object-fit:cover;
+                        border-radius:10px;
+                        background:rgba(255,255,255,0.05);
+                     ">
+            </div>
+
+            <div>
+                <h3 style="margin-bottom:10px;">Selfie</h3>
+                <img id="viewSelfie"
+                     src=""
+                     style="
+                        width:100%;
+                        max-height:220px;
+                        object-fit:cover;
+                        border-radius:10px;
+                        background:rgba(255,255,255,0.05);
+                     ">
+            </div>
+
+            <div>
+                <h3 style="margin-bottom:10px;">Business License</h3>
+                <img id="viewLicense"
+                     src=""
+                     style="
+                        width:100%;
+                        max-height:220px;
+                        object-fit:cover;
+                        border-radius:10px;
+                        background:rgba(255,255,255,0.05);
+                     ">
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editVendorModal"
+     class="modal"
+     style="
+        display:none;
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background:rgba(0,0,0,0.5);
+        z-index:1000;
+        justify-content:center;
+        align-items:center;
+     ">
+
+    <div class="glass-card"
+         style="
+            width:400px;
+            padding:24px;
+            position:relative;
+         ">
+
+        <button onclick="closeEditModal()"
+                style="
+                    position:absolute;
+                    top:16px;
+                    right:16px;
+                    background:none;
+                    border:none;
+                    color:white;
+                    cursor:pointer;
+                    font-size:1.5rem;
+                ">
+            <i class='bx bx-x'></i>
+        </button>
+
+        <h3 style="margin-bottom:20px;">
+            Edit Vendor
+        </h3>
+
+        <form id="editVendorForm" method="POST" action="">
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:8px; font-size:0.9rem; color:#9ca3af;">
+                    Name
+                </label>
+
+                <input type="text"
+                       id="editName"
+                       name="name"
+                       required
+                       style="
+                        width:100%;
+                        padding:10px;
+                        background:rgba(255,255,255,0.05);
+                        border:1px solid rgba(255,255,255,0.1);
+                        border-radius:8px;
+                        color:white;
+                       ">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:8px; font-size:0.9rem; color:#9ca3af;">
+                    Category
+                </label>
+
+                <input type="text"
+                       id="editCategory"
+                       name="category"
+                       required
+                       style="
+                        width:100%;
+                        padding:10px;
+                        background:rgba(255,255,255,0.05);
+                        border:1px solid rgba(255,255,255,0.1);
+                        border-radius:8px;
+                        color:white;
+                       ">
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <label style="display:block; margin-bottom:8px; font-size:0.9rem; color:#9ca3af;">
+                    Status
+                </label>
+
+                <select id="editStatus"
+                        name="status"
+                        required
+                        style="
+                            width:100%;
+                            padding:10px;
+                            background:rgba(255,255,255,0.05);
+                            border:1px solid rgba(255,255,255,0.1);
+                            border-radius:8px;
+                            color:white;
+                        ">
+
+                    <option value="pending" style="background:#111;">Pending</option>
+                    <option value="approved" style="background:#111;">Approved</option>
+                    <option value="rejected" style="background:#111;">Rejected</option>
+
+                </select>
+            </div>
+
+            <button type="submit"
+                    style="
+                        width:100%;
+                        padding:12px;
+                        background:var(--primary-color);
+                        color:white;
+                        border:none;
+                        border-radius:8px;
+                        cursor:pointer;
+                        font-weight:600;
+                    ">
+                Save Changes
+            </button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+
+    function setImage(id, filename) {
+        const img = document.getElementById(id);
+
+        if (filename && filename !== "None" && filename !== "-") {
+            img.src = "/uploads/" + filename;
+            img.style.display = "block";
+        } else {
+            img.removeAttribute("src");
+            img.style.display = "none";
+        }
+    }
+
+    function openViewModal(
+        name,
+        email,
+        owner,
+        phone,
+        location,
+        description,
+        nik,
+        npwp,
+        ktp,
+        selfie,
+        license
+    ) {
+        document.getElementById('viewName').innerText = name || "-";
+        document.getElementById('viewEmail').innerText = email || "-";
+        document.getElementById('viewOwner').innerText = owner || "-";
+        document.getElementById('viewPhone').innerText = phone || "-";
+        document.getElementById('viewLocation').innerText = location || "-";
+        document.getElementById('viewDescription').innerText = description || "-";
+        document.getElementById('viewNik').innerText = nik || "-";
+        document.getElementById('viewNpwp').innerText = npwp || "-";
+
+        setImage("viewKtp", ktp);
+        setImage("viewSelfie", selfie);
+        setImage("viewLicense", license);
+
+        document.getElementById('viewVendorModal').style.display = 'flex';
+    }
+
+    function closeViewModal() {
+        document.getElementById('viewVendorModal').style.display = 'none';
+    }
+
+    function openEditModal(id, name, category, status) {
+        document.getElementById('editVendorForm').action =
+            '/vendors/edit/' + id;
+
+        document.getElementById('editName').value = name;
+        document.getElementById('editCategory').value = category;
+        document.getElementById('editStatus').value = status;
+
+        document.getElementById('editVendorModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editVendorModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        const editModal = document.getElementById('editVendorModal');
+        const viewModal = document.getElementById('viewVendorModal');
+
+        if (event.target == editModal) {
+            closeEditModal();
+        }
+
+        if (event.target == viewModal) {
+            closeViewModal();
+        }
+    }
+
+</script>
+
+{% endblock %}

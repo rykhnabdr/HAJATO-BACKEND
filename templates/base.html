@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hajato | Admin Dashboard</title>
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="Hajato Logo"
+                 onerror="this.style.display='none'">
+
+            <h2>Hajato</h2>
+        </div>
+
+        <div class="sidebar-menu">
+
+            <div class="menu-label">Main Menu</div>
+
+            <a href="{{ url_for('dashboard') }}"
+               class="menu-item {% if active_page == 'dashboard' %}active{% endif %}">
+                <i class='bx bx-grid-alt'></i>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('vendors') }}"
+               class="menu-item {% if active_page == 'vendors' %}active{% endif %}">
+                <i class='bx bx-store'></i>
+                Vendors
+            </a>
+
+            <a href="{{ url_for('users_page') }}"
+               class="menu-item {% if active_page == 'users' %}active{% endif %}">
+                <i class='bx bx-user'></i>
+                Users
+            </a>
+
+            <div class="menu-label" style="margin-top: 24px;">
+                Analytics
+            </div>
+
+            <a href="{{ url_for('reports') }}"
+               class="menu-item {% if active_page == 'reports' %}active{% endif %}">
+                <i class='bx bx-bar-chart-alt-2'></i>
+                Reports
+            </a>
+
+            <a href="{{ url_for('settings_page') }}"
+               class="menu-item {% if active_page == 'settings' %}active{% endif %}">
+                <i class='bx bx-cog'></i>
+                Settings
+            </a>
+
+        </div>
+
+        <div style="padding: 24px 16px; border-top: 1px solid var(--card-border);">
+
+            <a href="{{ url_for('logout') }}"
+               class="menu-item"
+               style="color: #ef4444; margin-bottom: 0;">
+
+                <i class='bx bx-log-out'></i>
+                Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-wrapper">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <div class="search-bar">
+                <i class='bx bx-search'></i>
+
+                <input type="text"
+                       placeholder="Search vendors, orders...">
+            </div>
+           
+
+            <div class="topbar-right"
+                 style="display:flex;align-items:center;gap:20px;">
+                  <!-- Tombol toggle di topbar -->
+<button class="theme-toggle" onclick="toggleTheme()">
+  <div class="theme-toggle-knob">☀️</div>
+</button>
+
+                <!-- PROFILE -->
+                <div class="profile-wrapper"
+                     style="position:relative;">
+
+                    <div class="profile-dropdown"
+                         onclick="toggleDropdown('profileDropdown')"
+                         style="cursor:pointer; display:flex; align-items:center; gap:10px;">
+
+                        <div class="profile-info" style="text-align:right;">
+
+                            <span class="profile-name">
+                                {{ session.get('name', 'Admin') }}
+                            </span>
+
+                            <span class="profile-role">
+                                {{ session.get('role', 'admin') }}
+                            </span>
+
+                        </div>
+
+                        <img src="https://ui-avatars.com/api/?name={{ session.get('name', 'Admin') }}&background=FF7A00&color=fff&bold=true"
+                             alt="Profile">
+
+                        <i class='bx bx-chevron-down text-muted'></i>
+                    </div>
+
+                    <!-- DROPDOWN -->
+                    <div id="profileDropdown"
+                         class="dropdown-menu glass-card"
+                         style="display:none;position:absolute;right:0;top:100%;width:200px;padding:8px;margin-top:15px;z-index:1000;flex-direction:column;gap:4px;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+
+                        <div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;">
+
+                            <strong style="display:block;font-size:0.95rem;">
+                                {{ session.get('name', 'Admin') }}
+                            </strong>
+
+                            <span style="font-size:0.8rem;color:var(--text-muted);">
+                                {{ session.get('email', 'admin@hajato.com') }}
+                            </span>
+
+                        </div>
+
+                        <a href="{{ url_for('settings_page') }}"
+                           style="color:white;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
+
+                            <i class='bx bx-user'></i>
+                            My Profile
+                        </a>
+
+                        <a href="{{ url_for('settings_page') }}"
+                           style="color:white;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
+
+                            <i class='bx bx-cog'></i>
+                            Settings
+                        </a>
+
+                        <div style="height:1px;background:rgba(255,255,255,0.1);margin:4px 0;"></div>
+
+                        <a href="{{ url_for('logout') }}"
+                           style="color:#ef4444;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
+
+                            <i class='bx bx-log-out'></i>
+                            Logout
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        {% block content %}{% endblock %}
+
+    </div>
+
+    <script>
+        function toggleDropdown(id) {
+
+            var dropdown = document.getElementById(id);
+
+            var isVisible = dropdown.style.display === 'flex';
+
+            var dropdowns = document.getElementsByClassName("dropdown-menu");
+
+            for (var i = 0; i < dropdowns.length; i++) {
+                dropdowns[i].style.display = 'none';
+            }
+
+            if (!isVisible) {
+                dropdown.style.display = 'flex';
+            }
+        }
+
+        window.onclick = function(event) {
+
+            if (
+                !event.target.closest('.notification-wrapper') &&
+                !event.target.closest('.profile-wrapper')
+            ) {
+
+                var dropdowns =
+                    document.getElementsByClassName("dropdown-menu");
+
+                for (var i = 0; i < dropdowns.length; i++) {
+                    dropdowns[i].style.display = 'none';
+                }
+            }
+        }
+        function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+}
+
+// Load saved preference
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+    </script>
+
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

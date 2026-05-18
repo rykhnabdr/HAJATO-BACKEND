@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="content">
+    <div class="page-header">
+        <h1 class="page-title">App Users Directory</h1>
+        <p class="text-muted">View all customers registered via the mobile app.</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">Registered Accounts</h3>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>No HP</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for user in all_users %}
+                    <tr>
+                        <td>#CST-{{ user.id }}</td>
+
+                        <td>
+                            <div class="vendor-cell">
+                                <div class="vendor-avatar">
+                                    {{ user.name[0]|upper }}
+                                </div>
+                                <span>{{ user.name }}</span>
+                            </div>
+                        </td>
+
+                        <td>{{ user.phone or 'Belum diatur' }}</td>
+
+                        <td>{{ user.email or 'N/A' }}</td>
+
+                        <td>
+                            <span class="status-badge">
+                                {{ user.role }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="status-badge status-completed">
+                                {{ user.status }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <button
+                                type="button"
+                                class="action-btn view-user-btn"
+                                title="View Data Diri"
+                                data-name="{{ user.name }}"
+                                data-email="{{ user.email or 'Belum diatur' }}"
+                                data-phone="{{ user.phone or 'Belum diatur' }}"
+                                data-role="{{ user.role }}"
+                                data-status="{{ user.status }}"
+                            >
+                                <i class="bx bx-show"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div id="viewUserModal" class="modal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+
+    <div class="glass-card" style="width:450px; padding:24px; position:relative;">
+        <button onclick="closeViewModal()"
+            style="position:absolute; top:16px; right:16px; background:none; border:none; color:white; cursor:pointer; font-size:1.5rem;">
+            <i class="bx bx-x"></i>
+        </button>
+
+        <h3>Data Diri Pengguna</h3>
+
+        <p><b>Nama:</b> <span id="viewName">-</span></p>
+        <p><b>Email:</b> <span id="viewEmail">-</span></p>
+        <p><b>No HP:</b> <span id="viewPhone">-</span></p>
+        <p><b>Role:</b> <span id="viewRole">-</span></p>
+        <p><b>Status:</b> <span id="viewStatus">-</span></p>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.view-user-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        document.getElementById('viewName').innerText = this.dataset.name;
+        document.getElementById('viewEmail').innerText = this.dataset.email;
+        document.getElementById('viewPhone').innerText = this.dataset.phone;
+        document.getElementById('viewRole').innerText = this.dataset.role;
+        document.getElementById('viewStatus').innerText = this.dataset.status;
+
+        document.getElementById('viewUserModal').style.display = 'flex';
+    });
+});
+
+function closeViewModal() {
+    document.getElementById('viewUserModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    var modal = document.getElementById('viewUserModal');
+
+    if (event.target == modal) {
+        closeViewModal();
+    }
+};
+</script>
+{% endblock %}
