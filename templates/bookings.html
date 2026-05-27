@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='bookings.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>Booking Management</h1>
+    <p>Kelola semua booking pengguna</p>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Vendor</th>
+                <th>Paket</th>
+                <th>Tanggal</th>
+                <th>Jam</th>
+                <th>Metode</th>
+                <th>Total</th>
+                <th>Status Booking</th>
+                <th>Status Payment</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.vendor_name }}</td>
+                <td>{{ booking.package_name }}</td>
+                <td>{{ booking.event_date }}</td>
+                <td>{{ booking.event_time }}</td>
+                <td>{{ booking.payment_method }}</td>
+                <td>Rp {{ booking.total_price }}</td>
+                <td>
+                    <span class="status-badge status-{{ booking.booking_status }}">
+                        {{ booking.booking_status }}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="status-badge status-{{ booking.payment_status }}">
+                        {{ booking.payment_status }}
+                    </span>
+                </td>
+
+                <td class="action-cell">
+                    <button type="button"
+                        onclick="openDetail('{{ booking.id }}')"
+                        class="btn-action btn-detail">
+                        Detail
+                    </button>
+
+                    {% if booking.booking_status == 'waiting_confirmation' and booking.payment_proof %}
+                    <form action="/bookings/approve/{{ booking.id }}" method="POST">
+                        <button type="submit" class="btn-action btn-approve">Approve</button>
+                    </form>
+
+                    <form action="/bookings/reject/{{ booking.id }}" method="POST">
+                        <button type="submit" class="btn-action btn-reject">Reject</button>
+                    </form>
+                    {% else %}
+                    <button class="btn-action btn-disabled" disabled>
+                        Menunggu Bukti
+                    </button>
+                    <button class="btn-action btn-disabled" disabled>Reject</button>
+                    {% endif %}
+
+                    {% if booking.booking_status == 'completed' and booking.vendor_payout_status == 'hold' %}
+                    <form action="/bookings/release/{{ booking.id }}" method="POST">
+                        <button type="submit" class="btn-action btn-release">Cairkan</button>
+                    </form>
+                    {% else %}
+                    <button class="btn-action btn-disabled" disabled>Cairkan</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="detailModal" class="detail-modal">
+    <div class="detail-box">
+        <div class="detail-header">
+            <h2>Detail Booking</h2>
+            <button onclick="closeDetail()" class="modal-close">✕</button>
+        </div>
+
+        <div id="detailContent">Loading...</div>
+    </div>
+</div>
+
+<script>
+    window.bookingsData = JSON.parse('{{ bookings | tojson | safe }}');
+</script>
+
+<script src="{{ url_for('static', filename='bookings.js') }}"></script>
+
+{% endblock %}

@@ -1,0 +1,116 @@
+.action-cell {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.btn-action {
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: 0.2s;
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+}
+
+.btn-detail {
+    background: #64748b;
+}
+
+.btn-approve {
+    background: #22c55e;
+}
+
+.btn-reject {
+    background: #ef4444;
+}
+
+.btn-release {
+    background: #3b82f6;
+}
+
+.btn-disabled {
+    background: #1f2937;
+    color: #64748b;
+    cursor: not-allowed;
+    border: 1px solid #334155;
+}
+
+.detail-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+}
+
+.detail-box {
+    background: #111827;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.status-badge{
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+    display:inline-block;
+    text-transform:capitalize;
+}
+
+.status-confirmed,
+.status-paid,
+.status-released,
+.status-completed{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status-waiting_confirmation,
+.status-pending_verification,
+.status-waiting_admin_verification,
+.status-hold{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.status-rejected,
+.status-refund_required,
+.status-refund{
+    background:#fee2e2;
+    color:#991b1b;
+}

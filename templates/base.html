@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +13,15 @@
 
     {% block head %}{% endblock %}
 </head>
+
 <body>
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
 
         <div class="sidebar-header">
-            <img src="{{ url_for('static', filename='images/logo.png') }}"
-                 alt="Hajato Logo"
-                 onerror="this.style.display='none'">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Hajato Logo"
+                onerror="this.style.display='none'">
 
             <h2>Hajato</h2>
         </div>
@@ -29,36 +30,38 @@
 
             <div class="menu-label">Main Menu</div>
 
-            <a href="{{ url_for('dashboard') }}"
-               class="menu-item {% if active_page == 'dashboard' %}active{% endif %}">
+            <a href="{{ url_for('dashboard') }}" class="menu-item {% if active_page == 'dashboard' %}active{% endif %}">
                 <i class='bx bx-grid-alt'></i>
                 Dashboard
             </a>
 
-            <a href="{{ url_for('vendors') }}"
-               class="menu-item {% if active_page == 'vendors' %}active{% endif %}">
+            <a href="{{ url_for('vendors') }}" class="menu-item {% if active_page == 'vendors' %}active{% endif %}">
                 <i class='bx bx-store'></i>
                 Vendors
             </a>
 
-            <a href="{{ url_for('users_page') }}"
-               class="menu-item {% if active_page == 'users' %}active{% endif %}">
+            <a href="{{ url_for('users_page') }}" class="menu-item {% if active_page == 'users' %}active{% endif %}">
                 <i class='bx bx-user'></i>
                 Users
+            </a>
+
+            <a href="{{ url_for('bookings_page') }}"
+                class="menu-item {% if active_page == 'bookings' %}active{% endif %}">
+                <i class='bx bx-calendar-check'></i>
+                Bookings
             </a>
 
             <div class="menu-label" style="margin-top: 24px;">
                 Analytics
             </div>
 
-            <a href="{{ url_for('reports') }}"
-               class="menu-item {% if active_page == 'reports' %}active{% endif %}">
+            <a href="{{ url_for('reports') }}" class="menu-item {% if active_page == 'reports' %}active{% endif %}">
                 <i class='bx bx-bar-chart-alt-2'></i>
                 Reports
             </a>
 
             <a href="{{ url_for('settings_page') }}"
-               class="menu-item {% if active_page == 'settings' %}active{% endif %}">
+                class="menu-item {% if active_page == 'settings' %}active{% endif %}">
                 <i class='bx bx-cog'></i>
                 Settings
             </a>
@@ -67,9 +70,7 @@
 
         <div style="padding: 24px 16px; border-top: 1px solid var(--card-border);">
 
-            <a href="{{ url_for('logout') }}"
-               class="menu-item"
-               style="color: #ef4444; margin-bottom: 0;">
+            <a href="{{ url_for('logout') }}" class="menu-item" style="color: #ef4444; margin-bottom: 0;">
 
                 <i class='bx bx-log-out'></i>
                 Logout
@@ -88,25 +89,21 @@
             <div class="search-bar">
                 <i class='bx bx-search'></i>
 
-                <input type="text"
-                       placeholder="Search vendors, orders...">
+                <input type="text" placeholder="Search vendors, orders...">
             </div>
-           
 
-            <div class="topbar-right"
-                 style="display:flex;align-items:center;gap:20px;">
-                  <!-- Tombol toggle di topbar -->
-<button class="theme-toggle" onclick="toggleTheme()">
-  <div class="theme-toggle-knob">☀️</div>
-</button>
+
+            <div class="topbar-right" style="display:flex;align-items:center;gap:20px;">
+                <!-- Tombol toggle di topbar -->
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <div class="theme-toggle-knob">☀️</div>
+                </button>
 
                 <!-- PROFILE -->
-                <div class="profile-wrapper"
-                     style="position:relative;">
+                <div class="profile-wrapper" style="position:relative;">
 
-                    <div class="profile-dropdown"
-                         onclick="toggleDropdown('profileDropdown')"
-                         style="cursor:pointer; display:flex; align-items:center; gap:10px;">
+                    <div class="profile-dropdown" onclick="toggleDropdown('profileDropdown')"
+                        style="cursor:pointer; display:flex; align-items:center; gap:10px;">
 
                         <div class="profile-info" style="text-align:right;">
 
@@ -121,15 +118,14 @@
                         </div>
 
                         <img src="https://ui-avatars.com/api/?name={{ session.get('name', 'Admin') }}&background=FF7A00&color=fff&bold=true"
-                             alt="Profile">
+                            alt="Profile">
 
                         <i class='bx bx-chevron-down text-muted'></i>
                     </div>
 
                     <!-- DROPDOWN -->
-                    <div id="profileDropdown"
-                         class="dropdown-menu glass-card"
-                         style="display:none;position:absolute;right:0;top:100%;width:200px;padding:8px;margin-top:15px;z-index:1000;flex-direction:column;gap:4px;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+                    <div id="profileDropdown" class="dropdown-menu glass-card"
+                        style="display:none;position:absolute;right:0;top:100%;width:200px;padding:8px;margin-top:15px;z-index:1000;flex-direction:column;gap:4px;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
 
                         <div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;">
 
@@ -144,14 +140,14 @@
                         </div>
 
                         <a href="{{ url_for('settings_page') }}"
-                           style="color:white;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
+                            style="color:white;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
 
                             <i class='bx bx-user'></i>
                             My Profile
                         </a>
 
                         <a href="{{ url_for('settings_page') }}"
-                           style="color:white;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
+                            style="color:white;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
 
                             <i class='bx bx-cog'></i>
                             Settings
@@ -160,7 +156,7 @@
                         <div style="height:1px;background:rgba(255,255,255,0.1);margin:4px 0;"></div>
 
                         <a href="{{ url_for('logout') }}"
-                           style="color:#ef4444;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
+                            style="color:#ef4444;text-decoration:none;padding:10px;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:0.9rem;">
 
                             <i class='bx bx-log-out'></i>
                             Logout
@@ -196,7 +192,7 @@
             }
         }
 
-        window.onclick = function(event) {
+        window.onclick = function (event) {
 
             if (
                 !event.target.closest('.notification-wrapper') &&
@@ -212,18 +208,19 @@
             }
         }
         function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  localStorage.setItem('theme', isDark ? 'light' : 'dark');
-}
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        }
 
-// Load saved preference
-const saved = localStorage.getItem('theme');
-if (saved) document.documentElement.setAttribute('data-theme', saved);
+        // Load saved preference
+        const saved = localStorage.getItem('theme');
+        if (saved) document.documentElement.setAttribute('data-theme', saved);
     </script>
 
     {% block scripts %}{% endblock %}
 
 </body>
+
 </html>

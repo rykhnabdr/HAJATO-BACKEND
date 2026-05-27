@@ -4,7 +4,11 @@ from flask_jwt_extended import JWTManager
 from bson.objectid import ObjectId
 from routes.auth_routes import auth_bp
 from routes.vendor_routes import vendor_bp
+from routes.booking_routes import booking_bp
 from config.mongo import db
+from flask import send_from_directory
+
+from config.mail_config import mail
 
 import bcrypt
 import settings
@@ -15,11 +19,22 @@ app.secret_key = "SECRET_ADMIN"
 app.config["JWT_SECRET_KEY"] = settings.JWT_SECRET_KEY
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 
+app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+
+app.config["MAIL_SERVER"] = settings.MAIL_SERVER
+app.config["MAIL_PORT"] = settings.MAIL_PORT
+app.config["MAIL_USE_TLS"] = settings.MAIL_USE_TLS
+app.config["MAIL_USERNAME"] = settings.MAIL_USERNAME
+app.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
+app.config["MAIL_DEFAULT_SENDER"] = settings.MAIL_USERNAME
+
 JWTManager(app)
 CORS(app)
 
+mail.init_app(app)
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(vendor_bp)
+app.register_blueprint(booking_bp)
 
 users = db.users
 
@@ -223,6 +238,104 @@ def users_page():
         all_users=formatted_users
     )
 
+@app.route("/bookings")
+def bookings_page():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    booking_data = list(
+        db.bookings.find().sort("_id", -1)
+    )
+
+    bookings = []
+
+    for booking in booking_data:
+        bookings.append({
+            "id": str(booking["_id"]),
+            "user_id": booking.get("user_id", "-"),
+            "vendor_name": booking.get("vendor_name", "-"),
+            "package_name": booking.get("package_name", "-"),
+            "event_date": booking.get("event_date", "-"),
+            "event_time": booking.get("event_time", "-"),
+            "location": booking.get("location", "-"),
+            "payment_method": booking.get("payment_method", "-"),
+            "payment_detail": booking.get("payment_detail", "-"),
+            "payment_proof": booking.get("payment_proof", ""),
+            "total_price": booking.get("total_price", 0),
+            "booking_status": booking.get("booking_status", "-"),
+            "payment_status": booking.get("payment_status", "-"),
+            "vendor_payout_status": booking.get("vendor_payout_status", "-"),
+        })
+
+    return render_template(
+        "bookings.html",
+        active_page="bookings",
+        bookings=bookings
+    )
+
+@app.route("/bookings/approve/<booking_id>", methods=["POST"])
+def approve_booking(booking_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    db.bookings.update_one(
+        {"_id": ObjectId(booking_id)},
+        {
+            "$set": {
+                "booking_status": "confirmed",
+                "payment_status": "paid",
+                "vendor_payout_status": "hold"
+            }
+        }
+    )
+
+    return redirect("/bookings")
+
+
+@app.route("/bookings/reject/<booking_id>", methods=["POST"])
+def reject_booking(booking_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    db.bookings.update_one(
+        {"_id": ObjectId(booking_id)},
+        {
+            "$set": {
+                "booking_status": "rejected",
+                "payment_status": "refund_required",
+                "vendor_payout_status": "refund"
+            }
+        }
+    )
+
+    return redirect("/bookings")
+
+@app.route("/uploads/payment_proofs/<filename>")
+def uploaded_payment_proof(filename):
+    return send_from_directory(
+        "uploads/payment_proofs",
+        filename
+    )
+
+@app.route("/bookings/release/<booking_id>", methods=["POST"])
+def release_payout(booking_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    db.bookings.update_one(
+        {"_id": ObjectId(booking_id)},
+        {
+            "$set": {
+                "vendor_payout_status": "released"
+            }
+        }
+    )
+
+    return redirect("/bookings")
 
 @app.route("/vendors/approve/<vendor_id>", methods=["POST"])
 def approve_vendor_web(vendor_id):

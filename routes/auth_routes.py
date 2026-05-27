@@ -16,12 +16,19 @@ from bson.objectid import ObjectId
 from middleware.role_middleware import role_required
 
 import bcrypt
+import random
+from datetime import datetime, timedelta
+from flask_mail import Message
+from config.mail_config import mail
 
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 auth_bp = Blueprint('auth', __name__)
 
 users = db.users
 vendor_registrations = db.vendor_registrations
+otp_collection = db.otp_codes
 
 
 # =========================
@@ -73,6 +80,8 @@ def register():
 
     users.insert_one(user_data)
 
+    print(f"[REGISTER] User {email} berhasil register")
+
     return jsonify({
         "message": "Register berhasil"
     }), 201
@@ -113,9 +122,22 @@ def login():
             "message": "Password salah"
         }), 401
 
+    business_name = ""
+
+    if user.get("role") in ["vendor", "vendor_pending"]:
+        vendor = vendor_registrations.find_one({
+            "user_id": str(user["_id"])
+        })
+
+        if vendor:
+            business_name = vendor.get("business_name", "")
+
     token = create_access_token(
         identity=str(user["_id"])
     )
+
+    print(f"[LOGIN] User {email} berhasil login")
+
     return jsonify({
         "message": "Login berhasil",
         "token": token,
@@ -123,10 +145,295 @@ def login():
         "vendor_status": user.get("vendor_status"),
         "name": user["name"],
         "email": user["email"],
-        "phone": user.get("phone", "")
+        "phone": user.get("phone", ""),
+        "business_name": business_name}
+        ), 200
+
+# =========================
+# FORGOT PASSWORD - SEND OTP
+# =========================
+@auth_bp.route('/forgot-password', methods=['POST'])
+def forgot_password():
+
+    data = request.get_json()
+
+    email = data.get("email")
+
+    if not email:
+        return jsonify({
+            "message": "Email wajib diisi"
+        }), 400
+
+    user = users.find_one({
+        "email": email
+    })
+
+    if not user:
+        return jsonify({
+            "message": "Email tidak terdaftar"
+        }), 404
+
+    otp = str(random.randint(100000, 999999))
+
+    expires_at = datetime.utcnow() + timedelta(minutes=5)
+
+    otp_collection.delete_many({
+        "email": email
+    })
+
+    otp_collection.insert_one({
+        "email": email,
+        "otp": otp,
+        "expires_at": expires_at,
+        "verified": False
+    })
+
+    msg = Message(
+        subject="Kode OTP Reset Password HAJATO",
+        sender=("HAJATO", "hajato.app@gmail.com"),
+        recipients=[email],
+        body=f"""
+Halo {user.get('name', 'Pengguna')},
+
+Kode OTP reset password HAJATO Anda adalah:
+
+{otp}
+
+Kode ini berlaku selama 5 menit.
+Jangan bagikan kode ini kepada siapa pun.
+
+Terima kasih,
+HAJATO
+"""
+    )
+
+    print("SENDER :", "hajato.app@gmail.com")
+    print("RECIPIENT :", email)
+    print("OTP :", otp)
+
+    mail.send(msg)
+
+    print(f"[OTP] Kode OTP dikirim ke {email}")
+
+    return jsonify({
+        "message": "Kode OTP telah dikirim ke email"
     }), 200
 
 
+# =========================
+# VERIFY OTP
+# =========================
+@auth_bp.route('/verify-otp', methods=['POST'])
+def verify_otp():
+
+    data = request.get_json()
+
+    email = data.get("email")
+    otp = data.get("otp")
+
+    if not email or not otp:
+        return jsonify({
+            "message": "Email dan OTP wajib diisi"
+        }), 400
+
+    otp_data = otp_collection.find_one({
+        "email": email,
+        "otp": otp
+    })
+
+    if not otp_data:
+        return jsonify({
+            "message": "OTP tidak valid"
+        }), 400
+
+    if datetime.utcnow() > otp_data["expires_at"]:
+        return jsonify({
+            "message": "OTP sudah kadaluarsa"
+        }), 400
+
+    otp_collection.update_one(
+        {
+            "_id": otp_data["_id"]
+        },
+        {
+            "$set": {
+                "verified": True
+            }
+        }
+    )
+
+    return jsonify({
+        "message": "OTP berhasil diverifikasi"
+    }), 200
+
+
+# =========================
+# RESET PASSWORD
+# =========================
+@auth_bp.route('/reset-password', methods=['POST'])
+def reset_password():
+
+    data = request.get_json()
+
+    email = data.get("email")
+    otp = data.get("otp")
+    new_password = data.get("new_password")
+
+    if not email or not otp or not new_password:
+        return jsonify({
+            "message": "Semua field wajib diisi"
+        }), 400
+
+    otp_data = otp_collection.find_one({
+        "email": email,
+        "otp": otp,
+        "verified": True
+    })
+
+    if not otp_data:
+        return jsonify({
+            "message": "OTP belum diverifikasi"
+        }), 400
+
+    if datetime.utcnow() > otp_data["expires_at"]:
+        return jsonify({
+            "message": "OTP sudah kadaluarsa"
+        }), 400
+
+    hashed_password = bcrypt.hashpw(
+        new_password.encode("utf-8"),
+        bcrypt.gensalt()
+    )
+
+    users.update_one(
+        {
+            "email": email
+        },
+        {
+            "$set": {
+                "password": hashed_password
+            }
+        }
+    )
+
+    otp_collection.delete_many({
+        "email": email
+    })
+
+    print(f"[RESET PASSWORD] Password berhasil diubah untuk {email}")
+
+    return jsonify({
+        "message": "Password berhasil direset"
+    }), 200
+
+
+# =========================
+# GOOGLE LOGIN
+# =========================
+@auth_bp.route('/google-login', methods=['POST'])
+def google_login():
+
+    data = request.get_json()
+
+    google_token = data.get("idToken")
+
+    if not google_token:
+        return jsonify({
+            "message": "Google token wajib diisi"
+        }), 400
+
+    try:
+        idinfo = id_token.verify_oauth2_token(
+            google_token,
+            requests.Request()
+        )
+
+        email = idinfo.get("email")
+        name = idinfo.get("name", "")
+        picture = idinfo.get("picture", "")
+
+        if not email:
+            return jsonify({
+                "message": "Email Google tidak ditemukan"
+            }), 400
+
+        user = users.find_one({
+            "email": email
+        })
+
+        # =========================
+        # AUTO REGISTER GOOGLE USER
+        # =========================
+        if not user:
+            user_data = {
+                "name": name,
+                "email": email,
+                "phone": "",
+                "password": "",
+                "role": "user",
+                "vendor_status": None,
+                "bio": "",
+                "photo_url": picture,
+                "login_provider": "google"
+            }
+
+            result = users.insert_one(user_data)
+            user_id = str(result.inserted_id)
+
+            user = users.find_one({
+                "_id": ObjectId(user_id)
+            })
+
+        else:
+            users.update_one(
+                {
+                    "_id": user["_id"]
+                },
+                {
+                    "$set": {
+                        "photo_url": picture,
+                        "login_provider": "google"
+                    }
+                }
+            )
+
+            user = users.find_one({
+                "_id": user["_id"]
+            })
+
+        business_name = ""
+
+        if user.get("role") in ["vendor", "vendor_pending"]:
+            vendor = vendor_registrations.find_one({
+                "user_id": str(user["_id"])
+            })
+
+            if vendor:
+                business_name = vendor.get("business_name", "")
+
+        token = create_access_token(
+            identity=str(user["_id"])
+        )
+        print(f"[GOOGLE LOGIN] User {email} berhasil login")
+
+        return jsonify({
+            "message": "Google login berhasil",
+            "token": token,
+            "role": user["role"],
+            "vendor_status": user.get("vendor_status"),
+            "name": user["name"],
+            "email": user["email"],
+            "phone": user.get("phone", ""),
+            "business_name": business_name,
+            "photo_url": user.get("photo_url", "")
+        }), 200
+
+    except Exception as e:
+        print("GOOGLE LOGIN ERROR :", e)
+
+        return jsonify({
+            "message": "Google token tidak valid"
+        }), 401        
 # =========================
 # PROFILE
 # =========================
