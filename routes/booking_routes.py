@@ -5,6 +5,10 @@ from config.mongo import db
 import os
 from werkzeug.utils import secure_filename
 from bson.objectid import ObjectId
+from services.notification_service import (
+    send_push_notification,
+    save_notification
+)
 
 booking_bp = Blueprint(
     "booking",
@@ -18,11 +22,12 @@ bookings = db.bookings
 @booking_bp.route("/create", methods=["POST"])
 @jwt_required()
 def create_booking():
+
     current_user_id = get_jwt_identity()
 
     current_user = db.users.find_one({
-    "_id": ObjectId(current_user_id)
-})
+        "_id": ObjectId(current_user_id)
+    })
 
     data = request.get_json()
 
@@ -42,8 +47,8 @@ def create_booking():
         "payment_proof": "",
         "total_price": data.get("total_price"),
 
-        "booking_status": "waiting_confirmation",
-        "payment_status": "pending_verification",
+        "booking_status": "pending_payment",
+        "payment_status": "pending_payment",
         "vendor_payout_status": "hold",
 
         "created_at": datetime.utcnow()
@@ -51,11 +56,41 @@ def create_booking():
 
     result = bookings.insert_one(booking_data)
 
+    # ==========================
+    # NOTIF BOOKING BARU VENDOR
+    # ==========================
+
+    vendor = db.vendor_registrations.find_one({
+        "_id": ObjectId(data.get("vendor_id"))
+    })
+
+    if vendor:
+
+        vendor_user_id = vendor.get("user_id")
+
+        vendor_user = db.users.find_one({
+            "_id": ObjectId(vendor_user_id)
+        })
+
+        if vendor_user and vendor_user.get("fcm_token"):
+
+            send_push_notification(
+                vendor_user.get("fcm_token"),
+                "Booking Baru",
+                f"Ada pesanan baru dari {current_user.get('name')} untuk {data.get('package_name')}"
+            )
+
+            save_notification(
+                receiver_id=vendor_user["_id"],
+                role="vendor",
+                title="Booking Baru",
+                message=f"Ada pesanan baru dari {current_user.get('name')} untuk {data.get('package_name')}"
+            )
+
     return jsonify({
         "message": "Booking berhasil dibuat",
         "booking_id": str(result.inserted_id)
     }), 201
-
 @booking_bp.route("/my-bookings", methods=["GET"])
 @jwt_required()
 def my_bookings():
@@ -65,6 +100,7 @@ def my_bookings():
     booking_data = list(
         bookings.find({
             "user_id": current_user_id
+            # "payment_status": "paid"
         }).sort("_id", -1)
     )
 
@@ -150,10 +186,10 @@ def vendor_bookings():
 
     booking_data = list(
         bookings.find({
-            "vendor_id": str(vendor["_id"])
+            "vendor_id": str(vendor["_id"]),
+            "payment_status": "paid"
         }).sort("_id", -1)
     )
-
     result = []
 
     for booking in booking_data:
@@ -216,6 +252,58 @@ def complete_booking(booking_id):
         }
     )
 
+    user = db.users.find_one({
+        "_id": ObjectId(booking.get("user_id"))
+    })
+
+    if user and user.get("fcm_token"):
+
+        send_push_notification(
+            user.get("fcm_token"),
+            "Acara Selesai",
+            f"Vendor telah menyelesaikan layanan untuk {booking.get('package_name')}."
+        )
+
+        save_notification(
+            receiver_id=user["_id"],
+            role="user",
+            title="Acara Selesai",
+            message=f"Vendor telah menyelesaikan layanan untuk {booking.get('package_name')}."
+        )
+
     return jsonify({
         "message": "Acara berhasil diselesaikan"
+    }), 200
+
+@booking_bp.route("/check-availability", methods=["GET"])
+@jwt_required()
+def check_availability():
+
+    vendor_id = request.args.get("vendor_id")
+    event_date = request.args.get("event_date")
+
+    if not vendor_id or not event_date:
+        return jsonify({
+            "available": False,
+            "message": "Vendor dan tanggal wajib diisi"
+        }), 400
+
+    existing_booking = bookings.find_one({
+        "vendor_id": vendor_id,
+        "event_date": event_date,
+        "payment_status": "paid",
+        "booking_status": {
+            "$in": ["confirmed", "completed"]
+        }
+    })
+
+    if existing_booking:
+        return jsonify({
+            "available": False,
+            "message": "Tanggal ini sudah dibooking"
+        }), 200
+
+    return jsonify({
+        "available": True,
+        "message": "Tanggal tersedia"
     }), 200

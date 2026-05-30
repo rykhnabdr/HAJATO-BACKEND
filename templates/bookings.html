@@ -49,26 +49,9 @@
                 </td>
 
                 <td class="action-cell">
-                    <button type="button"
-                        onclick="openDetail('{{ booking.id }}')"
-                        class="btn-action btn-detail">
+                    <button type="button" onclick="openDetail('{{ booking.id }}')" class="btn-action btn-detail">
                         Detail
                     </button>
-
-                    {% if booking.booking_status == 'waiting_confirmation' and booking.payment_proof %}
-                    <form action="/bookings/approve/{{ booking.id }}" method="POST">
-                        <button type="submit" class="btn-action btn-approve">Approve</button>
-                    </form>
-
-                    <form action="/bookings/reject/{{ booking.id }}" method="POST">
-                        <button type="submit" class="btn-action btn-reject">Reject</button>
-                    </form>
-                    {% else %}
-                    <button class="btn-action btn-disabled" disabled>
-                        Menunggu Bukti
-                    </button>
-                    <button class="btn-action btn-disabled" disabled>Reject</button>
-                    {% endif %}
 
                     {% if booking.booking_status == 'completed' and booking.vendor_payout_status == 'hold' %}
                     <form action="/bookings/release/{{ booking.id }}" method="POST">

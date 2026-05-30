@@ -31,6 +31,53 @@ function badgeColor(type, value) {
     return "#64748b";
 }
 
+function statusText(value) {
+
+    if (value === "pending_payment")
+        return "Menunggu Pembayaran";
+
+    if (value === "paid")
+        return "Sudah Dibayar";
+
+    if (value === "confirmed")
+        return "Dikonfirmasi";
+
+    if (value === "completed")
+        return "Selesai";
+
+    if (value === "released")
+        return "Dana Dicairkan";
+
+    if (value === "hold")
+        return "Dana Ditahan";
+
+    if (value === "rejected")
+        return "Ditolak";
+
+    return value;
+}
+
+function formatRupiah(value) {
+    return new Intl.NumberFormat("id-ID").format(value);
+}
+
+function formatDate(value) {
+    if (!value) return "-";
+
+    const date = new Date(value);
+
+    return date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+    });
+}
+
+function paymentMethodText(value) {
+    if (value === "midtrans") return "Midtrans";
+    return value;
+}
+
 function openDetail(id) {
 
     const booking = bookingsData.find(b => b.id === id);
@@ -71,7 +118,7 @@ function openDetail(id) {
                 </small>
 
                 <p style="margin:4px 0 0;">
-                    ${booking.event_date}
+                    ${formatDate(booking.event_date)}
                 </p>
             </div>
 
@@ -121,7 +168,7 @@ function openDetail(id) {
                 </small>
 
                 <p style="margin:4px 0 0;">
-                    ${booking.payment_method}
+                    ${paymentMethodText(booking.payment_method)}
                 </p>
             </div>
 
@@ -130,52 +177,16 @@ function openDetail(id) {
                 padding:14px;
                 border-radius:12px;
             ">
-                <small style="color:#9ca3af;">
-                    Detail Payment
-                </small>
+<small style="color:#9ca3af;">
+    Status Pembayaran
+</small>
 
-                <p style="margin:4px 0 0;">
-                    ${booking.payment_detail}
-                </p>
+<p style="margin:4px 0 0;">
+    ${statusText(booking.payment_status)}
+</p>
             </div>
 
         </div>
-
-        <div style="
-            background:#1f2937;
-            padding:14px;
-            border-radius:12px;
-        ">
-
-            <small style="color:#9ca3af;">
-                Bukti Pembayaran
-            </small>
-
-            ${
-                booking.payment_proof
-                ?
-                `
-                <img
-                    src="/uploads/payment_proofs/${booking.payment_proof}"
-                    style="
-                        width:100%;
-                        margin-top:10px;
-                        border-radius:12px;
-                        max-height:260px;
-                        object-fit:cover;
-                    "
-                />
-                `
-                :
-                `
-                <p style="margin-top:8px;color:#9ca3af;">
-                    Belum upload bukti pembayaran
-                </p>
-                `
-            }
-
-        </div>
-
         <div style="
             background:#064e3b;
             padding:16px;
@@ -186,7 +197,7 @@ function openDetail(id) {
             </small>
 
             <h2 style="margin:4px 0 0;">
-                Rp ${booking.total_price}
+                Rp ${formatRupiah(booking.total_price)}
             </h2>
         </div>
 
@@ -202,7 +213,7 @@ function openDetail(id) {
                 border-radius:999px;
                 font-size:12px;
             ">
-                Booking: ${booking.booking_status}
+                Booking: ${statusText(booking.booking_status)}
             </span>
 
             <span style="
@@ -211,7 +222,7 @@ function openDetail(id) {
                 border-radius:999px;
                 font-size:12px;
             ">
-                Payment: ${booking.payment_status}
+                Payment: ${statusText(booking.payment_status)}
             </span>
 
             <span style="
@@ -220,7 +231,7 @@ function openDetail(id) {
                 border-radius:999px;
                 font-size:12px;
             ">
-                Payout: ${booking.vendor_payout_status}
+                Payout: ${statusText(booking.vendor_payout_status)}
             </span>
 
         </div>

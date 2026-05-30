@@ -677,3 +677,29 @@ def register_vendor_direct():
         "name": name,
         "email": email
     }), 201
+
+@auth_bp.route("/save-fcm-token", methods=["POST"])
+@jwt_required()
+def save_fcm_token():
+    current_user_id = get_jwt_identity()
+    data = request.get_json()
+
+    fcm_token = data.get("fcm_token")
+
+    if not fcm_token:
+        return jsonify({
+            "message": "FCM token wajib diisi"
+        }), 400
+
+    db.users.update_one(
+        {"_id": ObjectId(current_user_id)},
+        {
+            "$set": {
+                "fcm_token": fcm_token
+            }
+        }
+    )
+
+    return jsonify({
+        "message": "FCM token berhasil disimpan"
+    }), 200

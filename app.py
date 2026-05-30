@@ -6,12 +6,17 @@ from routes.auth_routes import auth_bp
 from routes.vendor_routes import vendor_bp
 from routes.booking_routes import booking_bp
 from config.mongo import db
+from routes.payment_routes import payment_bp
 from flask import send_from_directory
+from services.notification_service import send_push_notification
+from routes.notification_routes import notification_bp
 
 from config.mail_config import mail
 
 import bcrypt
 import settings
+import config.firebase_config
+from services.notification_service import send_push_notification
 
 app = Flask(__name__)
 app.secret_key = "SECRET_ADMIN"
@@ -27,6 +32,7 @@ app.config["MAIL_USE_TLS"] = settings.MAIL_USE_TLS
 app.config["MAIL_USERNAME"] = settings.MAIL_USERNAME
 app.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 app.config["MAIL_DEFAULT_SENDER"] = settings.MAIL_USERNAME
+app.register_blueprint(notification_bp)
 
 JWTManager(app)
 CORS(app)
@@ -35,6 +41,7 @@ mail.init_app(app)
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(vendor_bp)
 app.register_blueprint(booking_bp)
+app.register_blueprint(payment_bp)
 
 users = db.users
 
@@ -326,14 +333,41 @@ def release_payout(booking_id):
     if "user_id" not in session:
         return redirect("/login")
 
+    booking = db.bookings.find_one({
+        "_id": ObjectId(booking_id)
+    })
+
+    if not booking:
+        return redirect("/bookings")
+
     db.bookings.update_one(
-        {"_id": ObjectId(booking_id)},
+        {
+            "_id": ObjectId(booking_id),
+            "booking_status": "completed",
+            "vendor_payout_status": "hold"
+        },
         {
             "$set": {
                 "vendor_payout_status": "released"
             }
         }
     )
+
+    vendor = db.vendor_registrations.find_one({
+        "_id": ObjectId(booking.get("vendor_id"))
+    })
+
+    if vendor:
+        vendor_user = db.users.find_one({
+            "_id": ObjectId(vendor.get("user_id"))
+        })
+
+        if vendor_user and vendor_user.get("fcm_token"):
+            send_push_notification(
+                vendor_user.get("fcm_token"),
+                "Dana Dicairkan",
+                f"Dana untuk booking {booking.get('package_name')} telah dicairkan admin."
+            )
 
     return redirect("/bookings")
 
@@ -574,6 +608,33 @@ def web_login():
 
     return jsonify({"message": "Login berhasil"}), 200
 
+@app.route("/test-notification", methods=["POST"])
+def test_notification():
+
+    data = request.get_json()
+
+    token = data.get("token")
+
+    if not token:
+        return jsonify({
+            "message": "Token wajib diisi"
+        }), 400
+
+    success = send_push_notification(
+        token,
+        "HAJATO",
+        "Ini test notifikasi dari Flask"
+    )
+
+    if success:
+        return jsonify({
+            "message": "Notifikasi berhasil dikirim"
+        }), 200
+
+    return jsonify({
+        "message": "Notifikasi gagal dikirim"
+    }), 500
+
 
 if __name__ == "__main__":
     app.run(
@@ -581,3 +642,4 @@ if __name__ == "__main__":
         port=5000,
         debug=True
     )
+
