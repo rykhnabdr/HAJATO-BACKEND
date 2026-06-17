@@ -15,6 +15,7 @@ vendor_bp = Blueprint(
 vendor_registrations = db.vendor_registrations
 users = db.users
 vendor_services = db.vendor_services
+reviews = db.reviews
 # =========================
 # UPLOAD FOLDER
 # =========================
@@ -365,6 +366,109 @@ def get_my_services():
         "data": data
     }), 200
 
+@vendor_bp.route('/dashboard-stats', methods=['GET'])
+@jwt_required()
+def vendor_dashboard_stats():
+
+    current_user_id = get_jwt_identity()
+
+    vendor = vendor_registrations.find_one({
+        "user_id": current_user_id,
+        "status": "approved"
+    })
+
+    if not vendor:
+        return jsonify({
+            "message": "Vendor tidak ditemukan"
+        }), 404
+
+    vendor_id = str(vendor["_id"])
+
+    booking_data = list(
+        db.bookings.find({
+            "vendor_id": vendor_id,
+            "payment_status": "paid"
+        })
+    )
+
+    package_counter = {}
+
+    for booking in booking_data:
+        package_name = booking.get("package_name", "Paket")
+
+        if package_name not in package_counter:
+            package_counter[package_name] = 0
+
+        package_counter[package_name] += 1
+
+    top_packages = [
+        {
+            "package_name": name,
+            "total_booking": total
+        }
+        for name, total in package_counter.items()
+    ]
+
+    top_packages = sorted(
+        top_packages,
+        key=lambda x: x["total_booking"],
+        reverse=True
+    )[:5]
+
+    total_booking = len(booking_data)
+
+    completed_booking = len([
+        booking for booking in booking_data
+        if booking.get("booking_status") == "completed"
+    ])
+
+    total_pendapatan = sum(
+        booking.get("total_price", 0)
+        for booking in booking_data
+    )
+
+    dana_dicairkan = sum(
+        booking.get("total_price", 0)
+        for booking in booking_data
+        if booking.get("vendor_payout_status") == "released"
+    )
+
+    dana_ditahan = sum(
+        booking.get("total_price", 0)
+        for booking in booking_data
+        if booking.get("vendor_payout_status") == "hold"
+    )
+
+    review_data = list(
+        reviews.find({
+            "vendor_id": vendor_id
+        })
+    )
+
+    total_reviews = len(review_data)
+
+    average_rating = 0
+
+    if total_reviews > 0:
+        average_rating = round(
+            sum(
+                review.get("rating", 0)
+                for review in review_data
+            ) / total_reviews,
+            1
+        )
+
+    return jsonify({
+        "vendor_id": vendor_id,
+        "total_booking": total_booking,
+        "completed_booking": completed_booking,
+        "total_pendapatan": total_pendapatan,
+        "dana_dicairkan": dana_dicairkan,
+        "dana_ditahan": dana_ditahan,
+        "average_rating": average_rating,
+        "total_reviews": total_reviews,
+        "top_packages": top_packages,
+    }), 200
 
 # =========================
 # APPROVE VENDOR (ADMIN)
@@ -475,10 +579,6 @@ def public_vendors():
             })
         )
 
-        print("VENDOR:", vendor.get("business_name"))
-        print("JUMLAH SERVICES:", len(services))
-        print("NAMA SERVICES:", [s.get("name") for s in services])
-
         packages = []
 
         starting_price = 0
@@ -505,15 +605,35 @@ def public_vendors():
                 "features": s.get("features", [])
             })
 
+        vendor_reviews = list(
+            reviews.find({
+                "vendor_id": str(vendor["_id"])
+            })
+        )
+
+        review_count = len(vendor_reviews)
+
+        average_rating = 0
+
+        if review_count > 0:
+            average_rating = round(
+                sum(
+                    review.get("rating", 0)
+                    for review in vendor_reviews
+                ) / review_count,
+                1
+            )
+
         data.append({
             "id": str(vendor["_id"]),
+            "vendor_user_id": vendor.get("user_id", ""),
             "name": vendor.get("business_name", ""),
             "category": vendor.get("category", ""),
             "description": vendor.get("description", ""),
             "location": vendor.get("location", ""),
             "phone": vendor.get("phone", ""),
-            "rating": 5.0,
-            "review_count": 0,
+            "rating": average_rating,
+            "review_count": review_count,
             "image_url": image_url,
             "gallery": [
                 p["image"] for p in packages if p["image"]
@@ -526,4 +646,45 @@ def public_vendors():
     return jsonify({
         "message": "Vendor berhasil diambil",
         "data": data
+    }), 200
+
+@vendor_bp.route('/payout-history', methods=['GET'])
+@jwt_required()
+def payout_history():
+
+    current_user_id = get_jwt_identity()
+
+    vendor = vendor_registrations.find_one({
+        "user_id": current_user_id,
+        "status": "approved"
+    })
+
+    if not vendor:
+        return jsonify({
+            "message": "Vendor tidak ditemukan"
+        }), 404
+
+    vendor_id = str(vendor["_id"])
+
+    payout_data = list(
+        db.bookings.find({
+            "vendor_id": vendor_id,
+            "vendor_payout_status": "released"
+        }).sort("_id", -1)
+    )
+
+    result = []
+
+    for booking in payout_data:
+        result.append({
+            "id": str(booking["_id"]),
+            "customer_name": booking.get("customer_name", ""),
+            "package_name": booking.get("package_name", ""),
+            "event_date": booking.get("event_date", ""),
+            "total_price": booking.get("total_price", 0),
+            "vendor_payout_status": booking.get("vendor_payout_status", ""),
+        })
+
+    return jsonify({
+        "data": result
     }), 200

@@ -141,6 +141,7 @@ def login():
     return jsonify({
         "message": "Login berhasil",
         "token": token,
+        "user_id": str(user["_id"]),
         "role": user["role"],
         "vendor_status": user.get("vendor_status"),
         "name": user["name"],

@@ -4,7 +4,7 @@ from datetime import datetime
 from config.mongo import db
 
 
-def send_push_notification(token, title, body):
+def send_push_notification(token, title, body, data=None):
 
     try:
         message = messaging.Message(
@@ -19,6 +19,7 @@ def send_push_notification(token, title, body):
                     sound="default"
                 )
             ),
+            data=data or {},
             token=token
         )
 

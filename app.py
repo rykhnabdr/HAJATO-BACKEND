@@ -10,6 +10,7 @@ from routes.payment_routes import payment_bp
 from flask import send_from_directory
 from services.notification_service import send_push_notification
 from routes.notification_routes import notification_bp
+from routes.review_routes import review_bp
 
 from config.mail_config import mail
 
@@ -17,6 +18,7 @@ import bcrypt
 import settings
 import config.firebase_config
 from services.notification_service import send_push_notification
+from routes.chat_routes import chat_bp
 
 app = Flask(__name__)
 app.secret_key = "SECRET_ADMIN"
@@ -33,6 +35,7 @@ app.config["MAIL_USERNAME"] = settings.MAIL_USERNAME
 app.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 app.config["MAIL_DEFAULT_SENDER"] = settings.MAIL_USERNAME
 app.register_blueprint(notification_bp)
+app.register_blueprint(review_bp)
 
 JWTManager(app)
 CORS(app)
@@ -42,6 +45,8 @@ app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(vendor_bp)
 app.register_blueprint(booking_bp)
 app.register_blueprint(payment_bp)
+
+app.register_blueprint(chat_bp)
 
 users = db.users
 

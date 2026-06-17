@@ -108,6 +108,13 @@ def my_bookings():
 
     for booking in booking_data:
 
+        existing_review = db.reviews.find_one({
+            "booking_id": str(booking["_id"]),
+            "user_id": current_user_id
+        })
+
+        has_reviewed = existing_review is not None
+
         result.append({
             "id": str(booking["_id"]),
             "vendor_name": booking.get("vendor_name", ""),
@@ -121,6 +128,7 @@ def my_bookings():
             "payment_status": booking.get("payment_status", ""),
             "vendor_payout_status": booking.get("vendor_payout_status", ""),
             "payment_proof": booking.get("payment_proof", ""),
+            "has_reviewed": has_reviewed,
         })
 
     return jsonify(result), 200
@@ -306,4 +314,46 @@ def check_availability():
     return jsonify({
         "available": True,
         "message": "Tanggal tersedia"
+    }), 200
+
+@booking_bp.route("/vendor-schedule", methods=["GET"])
+@jwt_required()
+def vendor_schedule():
+
+    current_user_id = get_jwt_identity()
+
+    vendor = db.vendor_registrations.find_one({
+        "user_id": current_user_id,
+        "status": "approved"
+    })
+
+    if not vendor:
+        return jsonify({
+            "message": "Vendor tidak ditemukan"
+        }), 404
+
+    schedule_data = list(
+        bookings.find({
+            "vendor_id": str(vendor["_id"]),
+            "payment_status": "paid"
+        }).sort("event_date", 1)
+    )
+
+    result = []
+
+    for booking in schedule_data:
+        result.append({
+            "id": str(booking["_id"]),
+            "customer_name": booking.get("customer_name", ""),
+            "package_name": booking.get("package_name", ""),
+            "event_date": booking.get("event_date", ""),
+            "event_time": booking.get("event_time", ""),
+            "location": booking.get("location", ""),
+            "booking_status": booking.get("booking_status", ""),
+            "payment_status": booking.get("payment_status", ""),
+            "total_price": booking.get("total_price", 0),
+        })
+
+    return jsonify({
+        "data": result
     }), 200
