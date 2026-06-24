@@ -5,6 +5,7 @@ from config.mongo import db
 import os
 from werkzeug.utils import secure_filename
 from bson.objectid import ObjectId
+from services.log_service import create_activity_log
 from services.notification_service import (
     send_push_notification,
     save_notification
@@ -29,7 +30,17 @@ def create_booking():
         "_id": ObjectId(current_user_id)
     })
 
+    if not current_user:
+        return jsonify({
+            "message": "User tidak ditemukan"
+        }), 404
+
     data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "message": "Data booking tidak boleh kosong"
+        }), 400
 
     booking_data = {
         "user_id": current_user_id,
@@ -56,10 +67,36 @@ def create_booking():
 
     result = bookings.insert_one(booking_data)
 
+    # =========================
+    # CATAT LOG: CREATE BOOKING
+    # =========================
+    create_activity_log(
+        user_id=current_user_id,
+        email=current_user.get("email", ""),
+        name=current_user.get("name", ""),
+        role=current_user.get("role", "user"),
+        action="CREATE_BOOKING",
+        title="Membuat booking",
+        description=f"Anda membuat booking untuk paket {data.get('package_name')} di vendor {data.get('vendor_name')}.",
+        target_type="booking",
+        target_id=result.inserted_id,
+        metadata={
+            "booking_id": str(result.inserted_id),
+            "vendor_id": data.get("vendor_id"),
+            "vendor_name": data.get("vendor_name"),
+            "package_id": data.get("package_id"),
+            "package_name": data.get("package_name"),
+            "event_date": data.get("event_date"),
+            "event_time": data.get("event_time"),
+            "location": data.get("location"),
+            "payment_method": data.get("payment_method"),
+            "total_price": data.get("total_price")
+        }
+    )
+
     # ==========================
     # NOTIF BOOKING BARU VENDOR
     # ==========================
-
     vendor = db.vendor_registrations.find_one({
         "_id": ObjectId(data.get("vendor_id"))
     })
@@ -91,6 +128,8 @@ def create_booking():
         "message": "Booking berhasil dibuat",
         "booking_id": str(result.inserted_id)
     }), 201
+
+
 @booking_bp.route("/my-bookings", methods=["GET"])
 @jwt_required()
 def my_bookings():
@@ -100,7 +139,6 @@ def my_bookings():
     booking_data = list(
         bookings.find({
             "user_id": current_user_id
-            # "payment_status": "paid"
         }).sort("_id", -1)
     )
 
@@ -198,6 +236,7 @@ def vendor_bookings():
             "payment_status": "paid"
         }).sort("_id", -1)
     )
+
     result = []
 
     for booking in booking_data:
@@ -218,6 +257,7 @@ def vendor_bookings():
         })
 
     return jsonify(result), 200
+
 
 @booking_bp.route("/complete/<booking_id>", methods=["PUT"])
 @jwt_required()
@@ -260,6 +300,37 @@ def complete_booking(booking_id):
         }
     )
 
+# =========================
+# CATAT LOG: COMPLETE BOOKING
+# =========================
+    vendor_user = db.users.find_one({
+        "_id": ObjectId(current_user_id)
+    })
+
+    if vendor_user:
+        create_activity_log(
+            user_id=current_user_id,
+            email=vendor_user.get("email", ""),
+            name=vendor_user.get("name", ""),
+            role="vendor",
+            action="COMPLETE_BOOKING",
+            title="Menyelesaikan booking",
+            description=f"Anda menyelesaikan layanan paket {booking.get('package_name')} untuk pelanggan {booking.get('customer_name')}.",
+            target_type="booking",
+            target_id=booking_id,
+            metadata={
+                "booking_id": booking_id,
+                "vendor_id": str(vendor["_id"]),
+                "vendor_name": vendor.get("business_name"),
+                "customer_name": booking.get("customer_name"),
+                "package_name": booking.get("package_name"),
+                "event_date": booking.get("event_date"),
+                "event_time": booking.get("event_time"),
+                "total_price": booking.get("total_price"),
+                "booking_status": "completed"
+            }
+        )
+
     user = db.users.find_one({
         "_id": ObjectId(booking.get("user_id"))
     })
@@ -282,6 +353,7 @@ def complete_booking(booking_id):
     return jsonify({
         "message": "Acara berhasil diselesaikan"
     }), 200
+
 
 @booking_bp.route("/check-availability", methods=["GET"])
 @jwt_required()
@@ -315,6 +387,7 @@ def check_availability():
         "available": True,
         "message": "Tanggal tersedia"
     }), 200
+
 
 @booking_bp.route("/vendor-schedule", methods=["GET"])
 @jwt_required()

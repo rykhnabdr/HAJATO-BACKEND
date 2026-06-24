@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="content">
+    <div class="page-header">
+        <h1 class="page-title">Activity Logs Overview</h1>
+        <p class="text-muted">
+            Memantau seluruh riwayat aktivitas user, vendor, dan admin dalam sistem HAJATO.
+        </p>
+    </div>
+
+    <!-- FILTER ROLE -->
+    <div class="glass-card" style="margin-top: 20px; padding: 18px;">
+        <div style="margin-bottom: 16px;">
+            <h4 style="margin-bottom: 10px;">Filter Role</h4>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="/logs?role=all&category={{ selected_category }}"
+                   class="status-badge"
+                   style="text-decoration: none; padding: 8px 14px;
+                   background: {% if selected_role == 'all' %}rgba(14,165,233,0.25){% else %}rgba(148,163,184,0.15){% endif %};
+                   color: {% if selected_role == 'all' %}#0ea5e9{% else %}#94a3b8{% endif %};">
+                    Semua
+                </a>
+
+                <a href="/logs?role=admin&category={{ selected_category }}"
+                   class="status-badge"
+                   style="text-decoration: none; padding: 8px 14px;
+                   background: {% if selected_role == 'admin' %}rgba(59,130,246,0.25){% else %}rgba(148,163,184,0.15){% endif %};
+                   color: {% if selected_role == 'admin' %}#3b82f6{% else %}#94a3b8{% endif %};">
+                    Admin
+                </a>
+
+                <a href="/logs?role=user&category={{ selected_category }}"
+                   class="status-badge"
+                   style="text-decoration: none; padding: 8px 14px;
+                   background: {% if selected_role == 'user' %}rgba(139,92,246,0.25){% else %}rgba(148,163,184,0.15){% endif %};
+                   color: {% if selected_role == 'user' %}#8b5cf6{% else %}#94a3b8{% endif %};">
+                    User
+                </a>
+
+                <a href="/logs?role=vendor&category={{ selected_category }}"
+                   class="status-badge"
+                   style="text-decoration: none; padding: 8px 14px;
+                   background: {% if selected_role == 'vendor' %}rgba(249,115,22,0.25){% else %}rgba(148,163,184,0.15){% endif %};
+                   color: {% if selected_role == 'vendor' %}#f97316{% else %}#94a3b8{% endif %};">
+                    Vendor
+                </a>
+            </div>
+        </div>
+
+        <!-- FILTER CATEGORY -->
+        <div>
+            <h4 style="margin-bottom: 10px;">Filter Aktivitas</h4>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                {% set categories = [
+                    ('all', 'Semua'),
+                    ('akun', 'Akun'),
+                    ('booking', 'Booking'),
+                    ('payment', 'Payment'),
+                    ('vendor', 'Vendor'),
+                    ('paket', 'Paket'),
+                    ('dana', 'Dana'),
+                    ('review', 'Review')
+                ] %}
+
+                {% for value, label in categories %}
+                    <a href="/logs?role={{ selected_role }}&category={{ value }}"
+                       class="status-badge"
+                       style="text-decoration: none; padding: 8px 14px;
+                       background: {% if selected_category == value %}rgba(34,197,94,0.25){% else %}rgba(148,163,184,0.15){% endif %};
+                       color: {% if selected_category == value %}#22c55e{% else %}#94a3b8{% endif %};">
+                        {{ label }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card" style="margin-top: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">Recent System Activities</h3>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Waktu (WIB)</th>
+                        <th>Pengguna</th>
+                        <th>Peran (Role)</th>
+                        <th>Aktivitas</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td>
+                            <span style="color: var(--text-muted);">
+                                {{ log.timestamp }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div style="font-weight: 600;">
+                                {{ log.email }}
+                            </div>
+                            <small style="color: var(--text-muted);">
+                                {{ log.name }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {% if log.role == 'admin' %}
+                                <span style="color: #3b82f6; font-weight: bold;">
+                                    <i class='bx bx-shield-quarter'></i> Admin
+                                </span>
+                            {% elif log.role == 'vendor' or log.role == 'vendor_pending' %}
+                                <span style="color: #FF7A00; font-weight: bold;">
+                                    <i class='bx bx-store-alt'></i> Vendor
+                                </span>
+                            {% else %}
+                                <span style="color: #8b5cf6; font-weight: bold;">
+                                    <i class='bx bx-user'></i> User
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if log.action == 'LOGIN' %}
+                                <span class="status-badge" style="background: rgba(34, 197, 94, 0.2); color: #22c55e;">
+                                    LOGIN
+                                </span>
+
+                            {% elif log.action == 'LOGOUT' %}
+                                <span class="status-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                                    LOGOUT
+                                </span>
+
+                            {% elif 'PAYMENT' in log.action %}
+                                <span class="status-badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">
+                                    {{ log.action }}
+                                </span>
+
+                            {% elif 'BOOKING' in log.action %}
+                                <span class="status-badge" style="background: rgba(14, 165, 233, 0.2); color: #0ea5e9;">
+                                    {{ log.action }}
+                                </span>
+
+                            {% elif 'VENDOR' in log.action %}
+                                <span class="status-badge" style="background: rgba(249, 115, 22, 0.2); color: #f97316;">
+                                    {{ log.action }}
+                                </span>
+
+                            {% elif 'PACKAGE' in log.action %}
+                                <span class="status-badge" style="background: rgba(168, 85, 247, 0.2); color: #a855f7;">
+                                    {{ log.action }}
+                                </span>
+
+                            {% elif 'REVIEW' in log.action %}
+                                <span class="status-badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308;">
+                                    {{ log.action }}
+                                </span>
+
+                            {% elif 'PAYOUT' in log.action %}
+                                <span class="status-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">
+                                    {{ log.action }}
+                                </span>
+
+                            {% else %}
+                                <span class="status-badge" style="background: rgba(148, 163, 184, 0.2); color: #94a3b8;">
+                                    {{ log.action }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div style="font-weight: 600;">
+                                {{ log.title }}
+                            </div>
+                            <small style="color: var(--text-muted);">
+                                {{ log.description }}
+                            </small>
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                            <i class='bx bx-history' style="font-size: 2rem; color: #8c909e; margin-bottom: 10px; display: block;"></i>
+                            Belum ada rekaman jejak aktivitas sesuai filter.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <br>
+</main>
+{% endblock %}

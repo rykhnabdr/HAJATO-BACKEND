@@ -7,10 +7,12 @@ from routes.vendor_routes import vendor_bp
 from routes.booking_routes import booking_bp
 from config.mongo import db
 from routes.payment_routes import payment_bp
-from flask import send_from_directory
 from services.notification_service import send_push_notification
+from services.log_service import create_activity_log
 from routes.notification_routes import notification_bp
 from routes.review_routes import review_bp
+from datetime import datetime, timedelta
+from routes.activity_log_routes import activity_log_bp
 
 from config.mail_config import mail
 
@@ -50,6 +52,10 @@ app.register_blueprint(chat_bp)
 
 users = db.users
 
+app.register_blueprint(
+    activity_log_bp,
+    url_prefix='/api/activity-logs'
+)
 
 @app.route("/")
 def home():
@@ -88,6 +94,20 @@ def login():
         session["name"] = user["name"]
         session["role"] = user["role"]
         session["email"] = user["email"]
+
+        # =========================
+        # LOG ACTIVITY (GLOBAL)
+        # =========================
+        log_data = {
+            "user_id": str(user["_id"]),
+            "email": user["email"],
+            "name": user["name"],
+            "role": user["role"], # <--- Tambahan untuk mendeteksi role
+            "action": "LOGIN",
+            "timestamp": datetime.utcnow()
+        }
+        db.activity_logs.insert_one(log_data) # <--- Ubah nama collection
+        print(f"\n[ACTIVITY LOG] 🟢 {user['role'].upper()} {user['email']} berhasil LOGIN pada {log_data['timestamp']} UTC\n")
 
         return redirect("/dashboard")
 
@@ -147,6 +167,24 @@ def dashboard():
             "status": vendor.get("status", "pending")
         })
 
+# =========================
+    # LOG ACTIVITY (GLOBAL)
+    # Mengambil 10 log terakhir campuran (Admin/User/Vendor)
+    # =========================
+    raw_logs = list(db.activity_logs.find().sort("timestamp", -1).limit(10))
+    recent_logs = []
+    
+    for log in raw_logs:
+        waktu = log.get("timestamp")
+        waktu_str = waktu.strftime("%d %b %Y, %H:%M:%S") if waktu else "-"
+        
+        recent_logs.append({
+            "email": log.get("email", "-"),
+            "role": log.get("role", "unknown"), # <--- Tangkap role-nya
+            "action": log.get("action", "-"),
+            "timestamp": waktu_str
+        })
+
     stats = {
         "total_vendors": total_vendors,
         "rejected_vendors": rejected_vendors,
@@ -165,7 +203,8 @@ def dashboard():
         cat_labels=["Users", "Admins", "Vendors"],
         cat_values=[active_users, total_admins, total_vendors],
 
-        pending_vendors=pending_vendors
+        pending_vendors=pending_vendors,
+        recent_logs=recent_logs  # <--- VARIABEL INI DIKIRIM KE HTML
     )
 
 @app.route("/vendors")
@@ -345,7 +384,7 @@ def release_payout(booking_id):
     if not booking:
         return redirect("/bookings")
 
-    db.bookings.update_one(
+    result = db.bookings.update_one(
         {
             "_id": ObjectId(booking_id),
             "booking_status": "completed",
@@ -358,6 +397,9 @@ def release_payout(booking_id):
         }
     )
 
+    if result.modified_count == 0:
+        return redirect("/bookings")
+
     vendor = db.vendor_registrations.find_one({
         "_id": ObjectId(booking.get("vendor_id"))
     })
@@ -366,6 +408,33 @@ def release_payout(booking_id):
         vendor_user = db.users.find_one({
             "_id": ObjectId(vendor.get("user_id"))
         })
+
+        # =========================
+        # CATAT LOG: PAYOUT RELEASED
+        # =========================
+        if vendor_user:
+            create_activity_log(
+                user_id=vendor.get("user_id"),
+                email=vendor_user.get("email", ""),
+                name=vendor_user.get("name", ""),
+                role="vendor",
+                action="PAYOUT_RELEASED",
+                title="Dana dicairkan",
+                description=f"Dana untuk booking paket {booking.get('package_name')} dari pelanggan {booking.get('customer_name')} telah dicairkan admin.",
+                target_type="booking",
+                target_id=booking_id,
+                metadata={
+                    "booking_id": booking_id,
+                    "vendor_id": booking.get("vendor_id"),
+                    "vendor_name": vendor.get("business_name"),
+                    "customer_name": booking.get("customer_name"),
+                    "package_name": booking.get("package_name"),
+                    "event_date": booking.get("event_date"),
+                    "event_time": booking.get("event_time"),
+                    "total_price": booking.get("total_price"),
+                    "vendor_payout_status": "released"
+                }
+            )
 
         if vendor_user and vendor_user.get("fcm_token"):
             send_push_notification(
@@ -410,8 +479,31 @@ def approve_vendor_web(vendor_id):
         }
     )
 
-    return redirect("/vendors")
+    vendor_user = db.users.find_one({
+        "_id": ObjectId(vendor["user_id"])
+    })
 
+    if vendor_user:
+        create_activity_log(
+            user_id=vendor["user_id"],
+            email=vendor_user.get("email", ""),
+            name=vendor_user.get("name", ""),
+            role="vendor",
+            action="VENDOR_APPROVED",
+            title="Vendor disetujui",
+            description=f"Pendaftaran vendor {vendor.get('business_name')} telah disetujui admin.",
+            target_type="vendor",
+            target_id=vendor_id,
+            metadata={
+                "vendor_id": vendor_id,
+                "business_name": vendor.get("business_name"),
+                "approved_by_admin_id": session.get("user_id"),
+                "approved_by_admin_email": session.get("email"),
+                "status": "approved"
+            }
+        )
+
+    return redirect("/vendors")
 
 @app.route("/vendors/reject/<vendor_id>", methods=["POST"])
 def reject_vendor_web(vendor_id):
@@ -447,8 +539,31 @@ def reject_vendor_web(vendor_id):
         }
     )
 
-    return redirect("/vendors")
+    vendor_user = db.users.find_one({
+        "_id": ObjectId(vendor["user_id"])
+    })
 
+    if vendor_user:
+        create_activity_log(
+            user_id=vendor["user_id"],
+            email=vendor_user.get("email", ""),
+            name=vendor_user.get("name", ""),
+            role="user",
+            action="VENDOR_REJECTED",
+            title="Vendor ditolak",
+            description=f"Pendaftaran vendor {vendor.get('business_name')} ditolak oleh admin.",
+            target_type="vendor",
+            target_id=vendor_id,
+            metadata={
+                "vendor_id": vendor_id,
+                "business_name": vendor.get("business_name"),
+                "rejected_by_admin_id": session.get("user_id"),
+                "rejected_by_admin_email": session.get("email"),
+                "status": "rejected"
+            }
+        )
+
+    return redirect("/vendors")
 
 @app.route("/vendors/edit/<vendor_id>", methods=["POST"])
 def edit_vendor(vendor_id):
@@ -578,6 +693,24 @@ def settings_page():
 
 @app.route("/logout")
 def logout():
+    # =========================
+    # TAMBAHAN: LOG ACTIVITY ADMIN LOGOUT (WEB)
+    # =========================
+# =========================
+    # LOG ACTIVITY (GLOBAL)
+    # =========================
+    if "email" in session:
+        log_data = {
+            "user_id": session.get("user_id"),
+            "email": session.get("email"),
+            "name": session.get("name"),
+            "role": session.get("role"), # <--- Tambahan role
+            "action": "LOGOUT",
+            "timestamp": datetime.utcnow()
+        }
+        db.activity_logs.insert_one(log_data) # <--- Ubah nama collection
+        print(f"\n[ACTIVITY LOG] 🔴 {session.get('role', '').upper()} {session.get('email')} melakukan LOGOUT pada {log_data['timestamp']} UTC\n")
+
     session.clear()
     return redirect("/login")
 
@@ -640,6 +773,127 @@ def test_notification():
         "message": "Notifikasi gagal dikirim"
     }), 500
 
+@app.route("/logs")
+def activity_logs_page():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    selected_role = request.args.get("role", "all")
+    selected_category = request.args.get("category", "all")
+
+    category_actions = {
+        "akun": [
+            "REGISTER",
+            "VERIFY_REGISTER_OTP",
+            "LOGIN",
+            "LOGOUT",
+            "RESET_PASSWORD",
+            "UPDATE_PROFILE",
+        ],
+        "booking": [
+            "CREATE_BOOKING",
+            "CANCEL_BOOKING",
+            "RECEIVE_BOOKING",
+            "COMPLETE_BOOKING",
+            "ACCEPT_BOOKING",
+            "REJECT_BOOKING",
+        ],
+        "payment": [
+            "CREATE_PAYMENT",
+            "PAYMENT_PENDING",
+            "PAYMENT_SUCCESS",
+            "PAYMENT_FAILED",
+        ],
+        "vendor": [
+            "VENDOR_REGISTER",
+            "VENDOR_APPROVED",
+            "VENDOR_REJECTED",
+            "UPDATE_VENDOR_PROFILE",
+        ],
+        "paket": [
+            "CREATE_PACKAGE",
+            "UPDATE_PACKAGE",
+            "DELETE_PACKAGE",
+            "ADD_SERVICE",
+            "EDIT_SERVICE",
+            "DELETE_SERVICE",
+        ],
+        "dana": [
+            "PAYOUT_RELEASED",
+        ],
+        "review": [
+            "CREATE_REVIEW",
+            "UPDATE_REVIEW",
+            "DELETE_REVIEW",
+            "ADD_REVIEW",
+        ],
+    }
+
+    query = {}
+
+    # =========================
+    # FILTER ROLE
+    # =========================
+    if selected_role == "admin":
+        query["role"] = "admin"
+
+    elif selected_role == "user":
+        query["role"] = "user"
+
+    elif selected_role == "vendor":
+        query["role"] = {
+            "$in": [
+                "vendor",
+                "vendor_pending"
+            ]
+        }
+
+    # =========================
+    # FILTER CATEGORY
+    # =========================
+    if selected_category != "all":
+        actions = category_actions.get(selected_category)
+
+        if actions:
+            query["action"] = {
+                "$in": actions
+            }
+
+    raw_logs = list(
+        db.activity_logs.find(query)
+        .sort("timestamp", -1)
+        .limit(150)
+    )
+
+    recent_logs = []
+
+    for log in raw_logs:
+        waktu = log.get("timestamp")
+
+        if waktu:
+            waktu_wib = waktu + timedelta(hours=7)
+            waktu_str = waktu_wib.strftime("%d %b %Y, %H:%M:%S")
+        else:
+            waktu_str = "-"
+
+        recent_logs.append({
+            "email": log.get("email", "-"),
+            "name": log.get("name", "-"),
+            "role": log.get("role", "unknown"),
+            "action": log.get("action", "-"),
+            "title": log.get("title") or log.get("action", "-"),
+            "description": log.get("description", "-"),
+            "timestamp": waktu_str,
+        })
+
+    return render_template(
+        "logs.html",
+        active_page="logs",
+        recent_logs=recent_logs,
+        selected_role=selected_role,
+        selected_category=selected_category
+    )
 
 if __name__ == "__main__":
     app.run(

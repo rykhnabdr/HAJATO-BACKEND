@@ -2,6 +2,7 @@ import os
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson.objectid import ObjectId
+from services.log_service import create_activity_log
 
 from flask import Blueprint, request, jsonify
 from config.mongo import db
@@ -29,6 +30,152 @@ auth_bp = Blueprint('auth', __name__)
 users = db.users
 vendor_registrations = db.vendor_registrations
 otp_collection = db.otp_codes
+
+# =========================
+# OTP HELPER
+# =========================
+def generate_and_save_otp(email, purpose):
+    otp = str(random.randint(100000, 999999))
+    expires_at = datetime.utcnow() + timedelta(minutes=5)
+
+    otp_collection.delete_many({
+        "email": email,
+        "purpose": purpose
+    })
+
+    otp_collection.insert_one({
+        "email": email,
+        "otp": otp,
+        "purpose": purpose,
+        "expires_at": expires_at,
+        "verified": False
+    })
+
+    return otp
+
+
+def send_otp_email(email, name, otp, purpose):
+    if purpose == "register":
+        subject = "Kode OTP Verifikasi Akun HAJATO"
+        title = "Verifikasi Akun HAJATO"
+        subtitle = "Gunakan kode OTP berikut untuk menyelesaikan proses pendaftaran akun Anda."
+        badge_text = "VERIFIKASI AKUN"
+    else:
+        subject = "Kode OTP Reset Password HAJATO"
+        title = "Reset Password HAJATO"
+        subtitle = "Gunakan kode OTP berikut untuk melanjutkan proses reset password akun Anda."
+        badge_text = "RESET PASSWORD"
+
+    plain_body = f"""
+Halo {name},
+
+{subtitle}
+
+Kode OTP Anda adalah:
+
+{otp}
+
+Kode ini berlaku selama 5 menit.
+Jangan bagikan kode ini kepada siapa pun.
+
+Terima kasih,
+HAJATO
+"""
+
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{subject}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F4F7F7; font-family:Arial, Helvetica, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F4F7F7; padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
+          
+          <tr>
+            <td style="background:linear-gradient(135deg,#00796B,#26A69A); padding:32px 28px; text-align:center;">
+              <div style="font-size:34px; margin-bottom:10px;">🎊</div>
+              <h1 style="margin:0; color:#ffffff; font-size:28px; letter-spacing:1px;">HAJATO</h1>
+              <p style="margin:8px 0 0; color:#E0F2F1; font-size:14px;">Solusi digital untuk kebutuhan hajatan Anda</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:32px 28px 8px;">
+              <div style="display:inline-block; background-color:#E0F2F1; color:#00796B; padding:7px 12px; border-radius:999px; font-size:11px; font-weight:bold; letter-spacing:0.6px;">
+                {badge_text}
+              </div>
+
+              <h2 style="margin:20px 0 10px; color:#1F2937; font-size:23px;">
+                Halo, {name}
+              </h2>
+
+              <p style="margin:0; color:#4B5563; font-size:15px; line-height:1.7;">
+                {subtitle}
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:26px 28px;">
+              <div style="background-color:#F9FAFB; border:1px dashed #26A69A; border-radius:18px; padding:24px 20px;">
+                <p style="margin:0 0 10px; color:#6B7280; font-size:13px; font-weight:bold; letter-spacing:0.8px;">
+                  KODE OTP ANDA
+                </p>
+
+                <div style="font-size:38px; font-weight:bold; letter-spacing:10px; color:#00796B; margin:8px 0;">
+                  {otp}
+                </div>
+
+                <p style="margin:12px 0 0; color:#EF4444; font-size:13px;">
+                  Kode ini berlaku selama 5 menit.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 28px 28px;">
+              <div style="background-color:#FFF7ED; border-left:4px solid #F59E0B; padding:14px 16px; border-radius:12px;">
+                <p style="margin:0; color:#92400E; font-size:13px; line-height:1.6;">
+                  Jangan bagikan kode ini kepada siapa pun, termasuk pihak yang mengatasnamakan HAJATO.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:24px 28px; background-color:#F9FAFB; text-align:center; border-top:1px solid #E5E7EB;">
+              <p style="margin:0; color:#6B7280; font-size:12px; line-height:1.6;">
+                Email ini dikirim otomatis oleh sistem HAJATO.<br>
+                Jika Anda tidak merasa melakukan permintaan ini, abaikan email ini.
+              </p>
+              <p style="margin:14px 0 0; color:#00796B; font-size:13px; font-weight:bold;">
+                Terima kasih,<br>HAJATO
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+    msg = Message(
+        subject=subject,
+        sender=("HAJATO", "hajato.app@gmail.com"),
+        recipients=[email],
+        body=plain_body,
+        html=html_body
+    )
+
+    mail.send(msg)
 
 
 # =========================
@@ -75,17 +222,46 @@ def register():
         "password": hashed_password,
         "role": "user",
         "vendor_status": None,
-        "bio": ""
+        "bio": "",
+        "is_verified": False,
+        "login_provider": "local",
+        "created_at": datetime.utcnow()
     }
 
-    users.insert_one(user_data)
+    result = users.insert_one(user_data)
 
-    print(f"[REGISTER] User {email} berhasil register")
+    # =========================
+    # KIRIM OTP REGISTER
+    # =========================
+    otp = generate_and_save_otp(
+        email=email,
+        purpose="register"
+    )
+
+    send_otp_email(
+        email=email,
+        name=name,
+        otp=otp,
+        purpose="register"
+    )
+
+    # =========================
+    # CATAT LOG: REGISTER
+    # =========================
+    create_activity_log(
+        user_id=result.inserted_id,
+        email=email,
+        name=name,
+        role="user",
+        action="REGISTER"
+    )
+
+    print(f"[REGISTER] User {email} berhasil register dan OTP dikirim")
 
     return jsonify({
-        "message": "Register berhasil"
+        "message": "Register berhasil. Kode OTP telah dikirim ke email",
+        "email": email
     }), 201
-
 
 # =========================
 # LOGIN
@@ -112,15 +288,36 @@ def login():
             "message": "Email tidak ditemukan"
         }), 404
 
+    stored_password = user.get("password", "")
+
+    if not stored_password:
+        return jsonify({
+            "message": "Akun ini belum memiliki password"
+        }), 400
+
+    if isinstance(stored_password, bytes):
+        stored_password_bytes = stored_password
+    else:
+        stored_password_bytes = stored_password.encode("utf-8")
+
     valid_password = bcrypt.checkpw(
         password.encode("utf-8"),
-        user["password"]
+        stored_password_bytes
     )
 
     if not valid_password:
         return jsonify({
             "message": "Password salah"
         }), 401
+    
+# =========================
+# CEK VERIFIKASI EMAIL
+# =========================
+    if user.get("login_provider", "local") == "local" and user.get("is_verified") is False:
+        return jsonify({
+        "message": "Akun belum diverifikasi. Silakan cek email dan masukkan kode OTP terlebih dahulu"
+    }), 403
+
 
     business_name = ""
 
@@ -131,6 +328,20 @@ def login():
 
         if vendor:
             business_name = vendor.get("business_name", "")
+
+    token = create_access_token(
+        identity=str(user["_id"])
+    )
+    # =========================
+    # CATAT LOG: LOGIN (API)
+    # =========================
+    create_activity_log(
+        user_id=user["_id"],
+        email=user["email"],
+        name=user["name"],
+        role=user.get("role", "user"),
+        action="LOGIN"
+    )
 
     token = create_access_token(
         identity=str(user["_id"])
@@ -174,45 +385,17 @@ def forgot_password():
             "message": "Email tidak terdaftar"
         }), 404
 
-    otp = str(random.randint(100000, 999999))
-
-    expires_at = datetime.utcnow() + timedelta(minutes=5)
-
-    otp_collection.delete_many({
-        "email": email
-    })
-
-    otp_collection.insert_one({
-        "email": email,
-        "otp": otp,
-        "expires_at": expires_at,
-        "verified": False
-    })
-
-    msg = Message(
-        subject="Kode OTP Reset Password HAJATO",
-        sender=("HAJATO", "hajato.app@gmail.com"),
-        recipients=[email],
-        body=f"""
-Halo {user.get('name', 'Pengguna')},
-
-Kode OTP reset password HAJATO Anda adalah:
-
-{otp}
-
-Kode ini berlaku selama 5 menit.
-Jangan bagikan kode ini kepada siapa pun.
-
-Terima kasih,
-HAJATO
-"""
+    otp = generate_and_save_otp(
+        email=email,
+        purpose="reset_password"
     )
 
-    print("SENDER :", "hajato.app@gmail.com")
-    print("RECIPIENT :", email)
-    print("OTP :", otp)
-
-    mail.send(msg)
+    send_otp_email(
+        email=email,
+        name=user.get("name", "Pengguna"),
+        otp=otp,
+        purpose="reset_password"
+    )
 
     print(f"[OTP] Kode OTP dikirim ke {email}")
 
@@ -222,7 +405,7 @@ HAJATO
 
 
 # =========================
-# VERIFY OTP
+# VERIFY OTP RESET PASSWORD
 # =========================
 @auth_bp.route('/verify-otp', methods=['POST'])
 def verify_otp():
@@ -239,7 +422,8 @@ def verify_otp():
 
     otp_data = otp_collection.find_one({
         "email": email,
-        "otp": otp
+        "otp": otp,
+        "purpose": "reset_password"
     })
 
     if not otp_data:
@@ -269,6 +453,81 @@ def verify_otp():
 
 
 # =========================
+# VERIFY REGISTER OTP
+# =========================
+@auth_bp.route('/verify-register-otp', methods=['POST'])
+def verify_register_otp():
+
+    data = request.get_json()
+
+    email = data.get("email")
+    otp = data.get("otp")
+
+    if not email or not otp:
+        return jsonify({
+            "message": "Email dan OTP wajib diisi"
+        }), 400
+
+    otp_data = otp_collection.find_one({
+        "email": email,
+        "otp": otp,
+        "purpose": "register"
+    })
+
+    if not otp_data:
+        return jsonify({
+            "message": "OTP tidak valid"
+        }), 400
+
+    if datetime.utcnow() > otp_data["expires_at"]:
+        return jsonify({
+            "message": "OTP sudah kadaluarsa"
+        }), 400
+
+    user = users.find_one({
+        "email": email
+    })
+
+    if not user:
+        return jsonify({
+            "message": "User tidak ditemukan"
+        }), 404
+
+    users.update_one(
+        {
+            "email": email
+        },
+        {
+            "$set": {
+                "is_verified": True
+            }
+        }
+    )
+
+    otp_collection.delete_many({
+        "email": email,
+        "purpose": "register"
+    })
+
+    # =========================
+    # CATAT LOG: VERIFY REGISTER OTP
+    # =========================
+    create_activity_log(
+        user_id=user["_id"],
+        email=email,
+        name=user.get("name", "Unknown"),
+        role=user.get("role", "user"),
+        action="VERIFY_REGISTER_OTP"
+    )
+
+    print(f"[VERIFY REGISTER OTP] Akun {email} berhasil diverifikasi")
+
+    return jsonify({
+        "message": "Akun berhasil diverifikasi. Silakan login"
+    }), 200
+
+
+# =========================
 # RESET PASSWORD
 # =========================
 @auth_bp.route('/reset-password', methods=['POST'])
@@ -288,6 +547,7 @@ def reset_password():
     otp_data = otp_collection.find_one({
         "email": email,
         "otp": otp,
+        "purpose": "reset_password",
         "verified": True
     })
 
@@ -318,8 +578,22 @@ def reset_password():
     )
 
     otp_collection.delete_many({
-        "email": email
+        "email": email,
+        "purpose": "reset_password"
     })
+
+    # =========================
+    # CATAT LOG: RESET PASSWORD
+    # =========================
+    updated_user = users.find_one({"email": email})
+    if updated_user:
+        create_activity_log(
+            user_id=updated_user["_id"],
+            email=email,
+            name=updated_user.get("name", "Unknown"),
+            role=updated_user.get("role", "user"),
+            action="RESET_PASSWORD"
+        )
 
     print(f"[RESET PASSWORD] Password berhasil diubah untuk {email}")
 
@@ -415,6 +689,20 @@ def google_login():
         token = create_access_token(
             identity=str(user["_id"])
         )
+        # =========================
+        # CATAT LOG: GOOGLE LOGIN
+        # =========================
+        create_activity_log(
+            user_id=user["_id"],
+            email=user["email"],
+            name=user["name"],
+            role=user.get("role", "user"),
+            action="LOGIN"
+        )
+
+        token = create_access_token(
+            identity=str(user["_id"])
+        )
         print(f"[GOOGLE LOGIN] User {email} berhasil login")
 
         return jsonify({
@@ -504,6 +792,21 @@ def update_profile():
     updated_user = users.find_one({
         "_id": ObjectId(current_user_id)
     })
+    updated_user = users.find_one({
+        "_id": ObjectId(current_user_id)
+    })
+
+    # =========================
+    # CATAT LOG: UPDATE PROFILE
+    # =========================
+    if updated_user:
+        create_activity_log(
+            user_id=current_user_id,
+            email=updated_user.get("email"),
+            name=updated_user.get("name"),
+            role=updated_user.get("role", "user"),
+            action="UPDATE_PROFILE"
+        )
 
     return jsonify({
         "message": "Profil berhasil diperbarui",
@@ -605,9 +908,14 @@ def register_vendor_direct():
     user_data = {
         "name": name,
         "email": email,
+        "phone": phone,
         "password": hashed_password,
         "role": "vendor_pending",
-        "vendor_status": "pending"
+        "vendor_status": "pending",
+        "bio": "",
+        "is_verified": False,
+        "login_provider": "local",
+        "created_at": datetime.utcnow()
     }
 
     result = users.insert_one(user_data)
@@ -663,16 +971,42 @@ def register_vendor_direct():
 
     vendor_registrations.insert_one(vendor_data)
 
-    # =========================
-    # TOKEN
-    # =========================
-    token = create_access_token(
-        identity=user_id
+# =========================
+# KIRIM OTP REGISTER VENDOR
+# =========================
+    otp = generate_and_save_otp(
+        email=email,
+        purpose="register"
     )
+
+    send_otp_email(
+        email=email,
+        name=name,
+        otp=otp,
+        purpose="register"
+    )
+
+    # =========================
+    # CATAT LOG: VENDOR REGISTER
+    # =========================
+    create_activity_log(
+        user_id=user_id,
+        email=email,
+        name=name,
+        role="vendor_pending",
+        action="VENDOR_REGISTER"
+    )
+
+    # # =========================
+    # # TOKEN
+    # # =========================
+    # token = create_access_token(
+    #     identity=user_id
+    # )
 
     return jsonify({
         "message": "Pendaftaran vendor berhasil",
-        "token": token,
+        # "token": token,
         "role": "vendor_pending",
         "vendor_status": "pending",
         "name": name,
@@ -703,4 +1037,143 @@ def save_fcm_token():
 
     return jsonify({
         "message": "FCM token berhasil disimpan"
+    }), 200
+
+# Tambahkan di routes/auth_routes.py
+
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    current_user_id = get_jwt_identity()
+    user = users.find_one({"_id": ObjectId(current_user_id)})
+    
+    if user:
+        # =========================
+        # CATAT LOG: LOGOUT (VENDOR/USER)
+        # =========================
+        create_activity_log(
+            user_id=current_user_id,
+            email=user.get("email", "-"),
+            name=user.get("name", "-"),
+            role=user.get("role", "user"),
+            action="LOGOUT"
+        )
+        
+    return jsonify({"message": "Logout berhasil"}), 200
+
+# =========================
+# CHANGE PASSWORD
+# =========================
+@auth_bp.route('/change-password', methods=['POST'])
+@jwt_required()
+def change_password():
+    current_user_id = get_jwt_identity()
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "message": "Data tidak boleh kosong"
+        }), 400
+
+    old_password = data.get("old_password")
+    new_password = data.get("new_password")
+    confirm_password = data.get("confirm_password")
+
+    if not old_password or not new_password or not confirm_password:
+        return jsonify({
+            "message": "Password lama, password baru, dan konfirmasi password wajib diisi"
+        }), 400
+
+    if new_password != confirm_password:
+        return jsonify({
+            "message": "Konfirmasi password baru tidak sama"
+        }), 400
+
+    # AMBIL USER DULU
+    user = users.find_one({
+        "_id": ObjectId(current_user_id)
+    })
+
+    if not user:
+        return jsonify({
+            "message": "User tidak ditemukan"
+        }), 404
+
+    # BARU CEK ROLE
+    user_role = user.get("role", "user")
+    min_password_length = 8 if user_role in ["vendor", "vendor_pending"] else 6
+
+    if len(new_password) < min_password_length:
+        return jsonify({
+            "message": f"Password baru minimal {min_password_length} karakter"
+        }), 400
+
+    if old_password == new_password:
+        return jsonify({
+            "message": "Password baru tidak boleh sama dengan password lama"
+        }), 400
+
+    stored_password = user.get("password", "")
+    login_provider = user.get("login_provider", "local")
+
+    if not stored_password:
+        return jsonify({
+            "message": "Akun ini tidak memiliki password lokal"
+        }), 400
+
+    if login_provider not in ["local", "", None]:
+        return jsonify({
+            "message": "Akun ini tidak menggunakan password lokal"
+        }), 400
+
+    if isinstance(stored_password, bytes):
+        stored_password_bytes = stored_password
+    else:
+        stored_password_bytes = stored_password.encode("utf-8")
+
+    is_old_password_valid = bcrypt.checkpw(
+        old_password.encode("utf-8"),
+        stored_password_bytes
+    )
+
+    if not is_old_password_valid:
+        return jsonify({
+            "message": "Password lama salah"
+        }), 400
+
+    hashed_new_password = bcrypt.hashpw(
+        new_password.encode("utf-8"),
+        bcrypt.gensalt()
+    ).decode("utf-8")
+
+    users.update_one(
+        {
+            "_id": ObjectId(current_user_id)
+        },
+        {
+            "$set": {
+                "password": hashed_new_password,
+                "login_provider": "local",
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+
+    create_activity_log(
+        user_id=current_user_id,
+        email=user.get("email", ""),
+        name=user.get("name", ""),
+        role=user.get("role", "user"),
+        action="CHANGE_PASSWORD",
+        title="Mengubah password",
+        description="Anda berhasil mengubah password akun.",
+        target_type="user",
+        target_id=current_user_id,
+        metadata={
+            "min_password_length": min_password_length
+        }
+    )
+
+    return jsonify({
+        "message": "Password berhasil diubah"
     }), 200

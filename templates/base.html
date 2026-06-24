@@ -60,6 +60,11 @@
                 Reports
             </a>
 
+            <a href="{{ url_for('activity_logs_page') }}" class="menu-item {% if active_page == 'logs' %}active{% endif %}">
+                <i class='bx bx-history'></i>
+                Activity Logs
+            </a>
+
             <a href="{{ url_for('settings_page') }}"
                 class="menu-item {% if active_page == 'settings' %}active{% endif %}">
                 <i class='bx bx-cog'></i>
