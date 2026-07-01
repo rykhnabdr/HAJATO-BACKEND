@@ -13,7 +13,6 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
-from bson.objectid import ObjectId
 from middleware.role_middleware import role_required
 
 import bcrypt
@@ -97,9 +96,11 @@ HAJATO
           
           <tr>
             <td style="background:linear-gradient(135deg,#00796B,#26A69A); padding:32px 28px; text-align:center;">
-              <div style="font-size:34px; margin-bottom:10px;">🎊</div>
-              <h1 style="margin:0; color:#ffffff; font-size:28px; letter-spacing:1px;">HAJATO</h1>
-              <p style="margin:8px 0 0; color:#E0F2F1; font-size:14px;">Solusi digital untuk kebutuhan hajatan Anda</p>
+              <div style="margin-bottom: 12px;">
+                <img src="https://i.ibb.co.com/qL3wHLwT/hajatonew.png" alt="HAJATO Logo" width="65" height="65" style="border-radius: 16px; object-fit: cover; border: 2px solid rgba(255,255,255,0.4); display: inline-block;" />
+              </div>
+              <h1 style="margin:0; color:#ffffff; font-size:26px; letter-spacing:1.5px; font-family: 'Playfair Display', Georgia, serif; font-weight: 900;">HAJATO</h1>
+              <p style="margin:6px 0 0; color:#E0F2F1; font-size:14px;">Solusi digital untuk kebutuhan hajatan Anda</p>
             </td>
           </tr>
 
@@ -186,6 +187,9 @@ UPLOAD_FOLDER = "uploads"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# =========================
+# REGISTER
+# =========================
 @auth_bp.route('/register', methods=['POST'])
 def register():
 
@@ -264,7 +268,7 @@ def register():
     }), 201
 
 # =========================
-# LOGIN
+# LOGIN (FIXED: MENGIRIM EVENT_ID DAN PHOTO_URL TERAKHIR USER)
 # =========================
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -343,11 +347,13 @@ def login():
         action="LOGIN"
     )
 
-    token = create_access_token(
-        identity=str(user["_id"])
-    )
+    # CARI ACARA TERBARU MILIK USER AGAR MENU DASHBOARD DI FLUTTER MUNCUL
+    event_id_str = ""
+    last_event = db.events.find_one({"user_id": str(user["_id"])}, sort=[("_id", -1)])
+    if last_event:
+        event_id_str = str(last_event["_id"])
 
-    print(f"[LOGIN] User {email} berhasil login")
+    print(f"[LOGIN] User {email} berhasil login. Event ID Terdeteksi: {event_id_str}")
 
     return jsonify({
         "message": "Login berhasil",
@@ -358,8 +364,10 @@ def login():
         "name": user["name"],
         "email": user["email"],
         "phone": user.get("phone", ""),
-        "business_name": business_name}
-        ), 200
+        "business_name": business_name,
+        "event_id": event_id_str,
+        "photo_url": user.get("photo_url", "")  # ── 🟢 FIX: Dikirim ke Flutter biar langsung ke-save pas login
+    }), 200
 
 # =========================
 # FORGOT PASSWORD - SEND OTP
@@ -603,7 +611,7 @@ def reset_password():
 
 
 # =========================
-# GOOGLE LOGIN
+# GOOGLE LOGIN (FIXED: SEKARANG MENGIRIM EVENT_ID TERAKHIR USER)
 # =========================
 @auth_bp.route('/google-login', methods=['POST'])
 def google_login():
@@ -700,10 +708,13 @@ def google_login():
             action="LOGIN"
         )
 
-        token = create_access_token(
-            identity=str(user["_id"])
-        )
-        print(f"[GOOGLE LOGIN] User {email} berhasil login")
+        # CARI ACARA TERBARU MILIK GOOGLE USER AGAR MENU DASHBOARD DI FLUTTER MUNCUL
+        event_id_str = ""
+        last_event = db.events.find_one({"user_id": str(user["_id"])}, sort=[("_id", -1)])
+        if last_event:
+            event_id_str = str(last_event["_id"])
+
+        print(f"[GOOGLE LOGIN] User {email} berhasil login. Event ID Terdeteksi: {event_id_str}")
 
         return jsonify({
             "message": "Google login berhasil",
@@ -714,7 +725,8 @@ def google_login():
             "email": user["email"],
             "phone": user.get("phone", ""),
             "business_name": business_name,
-            "photo_url": user.get("photo_url", "")
+            "photo_url": user.get("photo_url", ""),
+            "event_id": event_id_str  
         }), 200
 
     except Exception as e:
@@ -723,8 +735,9 @@ def google_login():
         return jsonify({
             "message": "Google token tidak valid"
         }), 401        
+
 # =========================
-# PROFILE
+# PROFILE (MODIFIED FOR PHOTO_URL)
 # =========================
 @auth_bp.route('/profile', methods=['GET'])
 @jwt_required()
@@ -742,49 +755,65 @@ def profile():
         }), 404
 
     return jsonify({
-    "message": "Profile berhasil diambil",
-    "data": {
-        "id": str(user["_id"]),
-        "name": user.get("name"),
-        "email": user.get("email"),
-        "phone": user.get("phone", ""),
-        "bio": user.get("bio", ""),
-        "role": user.get("role"),
-        "vendor_status": user.get("vendor_status")
-    }
-}), 200
+        "message": "Profile berhasil diambil",
+        "data": {
+            "id": str(user["_id"]),
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "phone": user.get("phone", ""),
+            "bio": user.get("bio", ""),
+            "role": user.get("role"),
+            "vendor_status": user.get("vendor_status"),
+            "photo_url": user.get("photo_url", "") 
+        }
+    }), 200
 
+# =========================
+# UPDATE PROFILE (MODIFIED FOR MULTIPART AVATAR)
+# =========================
 @auth_bp.route('/update-profile', methods=['PUT'])
 @jwt_required()
 def update_profile():
 
     current_user_id = get_jwt_identity()
 
-    data = request.get_json()
-
-    name = data.get("name")
-    phone = data.get("phone")
-    bio = data.get("bio")
+    name = request.form.get("name")
+    phone = request.form.get("phone")
+    bio = request.form.get("bio")
 
     if not name:
         return jsonify({
             "message": "Nama wajib diisi"
         }), 400
 
+    update_data = {
+        "name": name,
+        "phone": phone,
+        "bio": bio,
+        "updated_at": datetime.utcnow()
+    }
+
+    avatar_image = request.files.get("avatar")
+    
+    if avatar_image and avatar_image.filename != '':
+        file_extension = os.path.splitext(avatar_image.filename)[1]
+        filename = secure_filename(f"avatar_{current_user_id}{file_extension}")
+        
+        avatar_image.save(os.path.join(UPLOAD_FOLDER, filename))
+        
+        photo_url = f"{request.url_root}uploads/{filename}"
+        update_data["photo_url"] = photo_url
+
     result = users.update_one(
         {
             "_id": ObjectId(current_user_id)
         },
         {
-            "$set": {
-                "name": name,
-                "phone": phone,
-                "bio": bio
-            }
+            "$set": update_data
         }
     )
 
-    print("UPDATE PROFILE HIT")
+    print("UPDATE PROFILE HIT (MULTIPART)")
     print("USER ID:", current_user_id)
     print("MATCHED:", result.matched_count)
     print("MODIFIED:", result.modified_count)
@@ -792,13 +821,7 @@ def update_profile():
     updated_user = users.find_one({
         "_id": ObjectId(current_user_id)
     })
-    updated_user = users.find_one({
-        "_id": ObjectId(current_user_id)
-    })
 
-    # =========================
-    # CATAT LOG: UPDATE PROFILE
-    # =========================
     if updated_user:
         create_activity_log(
             user_id=current_user_id,
@@ -814,7 +837,8 @@ def update_profile():
             "name": updated_user.get("name", ""),
             "email": updated_user.get("email", ""),
             "phone": updated_user.get("phone", ""),
-            "bio": updated_user.get("bio", "")
+            "bio": updated_user.get("bio", ""),
+            "photo_url": updated_user.get("photo_url", "") 
         }
     }), 200
 
@@ -833,15 +857,10 @@ def admin_only():
 
 # =========================
 # REGISTER VENDOR DIRECT
-# untuk user baru daftar vendor dari onboarding
-# endpoint: /api/auth/register-vendor
 # =========================
 @auth_bp.route('/register-vendor', methods=['POST'])
 def register_vendor_direct():
 
-    # =========================
-    # FORM DATA
-    # =========================
     name = request.form.get("name")
     email = request.form.get("email")
     password = request.form.get("password")
@@ -856,9 +875,6 @@ def register_vendor_direct():
     nik = request.form.get("nik")
     npwp = request.form.get("npwp")
 
-    # =========================
-    # FILE DATA
-    # =========================
     ktp_image = request.files.get("ktp_image")
     selfie_image = request.files.get("selfie_image")
     business_license = request.files.get("business_license")
@@ -868,13 +884,7 @@ def register_vendor_direct():
     print("EMAIL :", email)
     print("BUSINESS NAME :", business_name)
     print("CATEGORY :", category)
-    print("KTP :", ktp_image)
-    print("SELFIE :", selfie_image)
-    print("LICENSE :", business_license)
 
-    # =========================
-    # VALIDASI
-    # =========================
     if not name or not email or not password:
         return jsonify({
             "message": "Nama, email, dan password wajib diisi"
@@ -894,17 +904,11 @@ def register_vendor_direct():
             "message": "Email sudah digunakan"
         }), 400
 
-    # =========================
-    # HASH PASSWORD
-    # =========================
     hashed_password = bcrypt.hashpw(
         password.encode("utf-8"),
         bcrypt.gensalt()
     )
 
-    # =========================
-    # SIMPAN USER
-    # =========================
     user_data = {
         "name": name,
         "email": email,
@@ -921,9 +925,6 @@ def register_vendor_direct():
     result = users.insert_one(user_data)
     user_id = str(result.inserted_id)
 
-    # =========================
-    # SIMPAN FILE
-    # =========================
     ktp_filename = None
     selfie_filename = None
     license_filename = None
@@ -946,9 +947,6 @@ def register_vendor_direct():
             os.path.join(UPLOAD_FOLDER, license_filename)
         )
 
-    # =========================
-    # SIMPAN VENDOR REGISTRATION
-    # =========================
     vendor_data = {
         "user_id": user_id,
 
@@ -971,9 +969,6 @@ def register_vendor_direct():
 
     vendor_registrations.insert_one(vendor_data)
 
-# =========================
-# KIRIM OTP REGISTER VENDOR
-# =========================
     otp = generate_and_save_otp(
         email=email,
         purpose="register"
@@ -986,9 +981,6 @@ def register_vendor_direct():
         purpose="register"
     )
 
-    # =========================
-    # CATAT LOG: VENDOR REGISTER
-    # =========================
     create_activity_log(
         user_id=user_id,
         email=email,
@@ -997,22 +989,17 @@ def register_vendor_direct():
         action="VENDOR_REGISTER"
     )
 
-    # # =========================
-    # # TOKEN
-    # # =========================
-    # token = create_access_token(
-    #     identity=user_id
-    # )
-
     return jsonify({
         "message": "Pendaftaran vendor berhasil",
-        # "token": token,
         "role": "vendor_pending",
         "vendor_status": "pending",
         "name": name,
         "email": email
     }), 201
 
+# =========================
+# SAVE FCM TOKEN
+# =========================
 @auth_bp.route("/save-fcm-token", methods=["POST"])
 @jwt_required()
 def save_fcm_token():
@@ -1039,8 +1026,9 @@ def save_fcm_token():
         "message": "FCM token berhasil disimpan"
     }), 200
 
-# Tambahkan di routes/auth_routes.py
-
+# =========================
+# LOGOUT
+# =========================
 @auth_bp.route('/logout', methods=['POST'])
 @jwt_required()
 def logout():
@@ -1048,9 +1036,6 @@ def logout():
     user = users.find_one({"_id": ObjectId(current_user_id)})
     
     if user:
-        # =========================
-        # CATAT LOG: LOGOUT (VENDOR/USER)
-        # =========================
         create_activity_log(
             user_id=current_user_id,
             email=user.get("email", "-"),
@@ -1081,7 +1066,7 @@ def change_password():
 
     if not old_password or not new_password or not confirm_password:
         return jsonify({
-            "message": "Password lama, password baru, dan konfirmasi password wajib diisi"
+            "message": "Password lama, password baru, and konfirmasi password wajib diisi"
         }), 400
 
     if new_password != confirm_password:
@@ -1089,7 +1074,6 @@ def change_password():
             "message": "Konfirmasi password baru tidak sama"
         }), 400
 
-    # AMBIL USER DULU
     user = users.find_one({
         "_id": ObjectId(current_user_id)
     })
@@ -1099,7 +1083,6 @@ def change_password():
             "message": "User tidak ditemukan"
         }), 404
 
-    # BARU CEK ROLE
     user_role = user.get("role", "user")
     min_password_length = 8 if user_role in ["vendor", "vendor_pending"] else 6
 

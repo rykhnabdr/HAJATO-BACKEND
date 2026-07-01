@@ -42,9 +42,16 @@ def create_booking():
             "message": "Data booking tidak boleh kosong"
         }), 400
 
+    # ── 🟢 AMBIL EVENT_ID DARI BODY REQUEST FLUTTER ──
+    event_id_str = data.get("event_id")
+
     booking_data = {
         "user_id": current_user_id,
         "customer_name": current_user.get("name"),
+        
+        # ── 🟢 MASUKKAN EVENT_ID JIKA TERSEDIA (SUPAYA DASHBOARD BISA FILTER PER ACARA) ──
+        "event_id": ObjectId(event_id_str) if event_id_str and ObjectId.is_valid(event_id_str) else None,
+        
         "vendor_id": data.get("vendor_id"),
         "vendor_name": data.get("vendor_name"),
         "package_id": data.get("package_id"),
@@ -82,6 +89,7 @@ def create_booking():
         target_id=result.inserted_id,
         metadata={
             "booking_id": str(result.inserted_id),
+            "event_id": event_id_str, # Ditambahkan ke metadata log
             "vendor_id": data.get("vendor_id"),
             "vendor_name": data.get("vendor_name"),
             "package_id": data.get("package_id"),
@@ -214,6 +222,9 @@ def upload_payment_proof(booking_id):
     }), 200
 
 
+# ==============================================================================
+# VENDOR BOOKINGS (PESANAN MASUK - FIXED FOR TESTING)
+# ==============================================================================
 @booking_bp.route("/vendor-bookings", methods=["GET"])
 @jwt_required()
 def vendor_bookings():
@@ -233,7 +244,9 @@ def vendor_bookings():
     booking_data = list(
         bookings.find({
             "vendor_id": str(vendor["_id"]),
-            "payment_status": "paid"
+            "payment_status": {
+                "$in": ["paid", "pending_payment", "waiting_admin_verification"]
+            }
         }).sort("_id", -1)
     )
 
@@ -300,9 +313,6 @@ def complete_booking(booking_id):
         }
     )
 
-# =========================
-# CATAT LOG: COMPLETE BOOKING
-# =========================
     vendor_user = db.users.find_one({
         "_id": ObjectId(current_user_id)
     })
@@ -408,7 +418,9 @@ def vendor_schedule():
     schedule_data = list(
         bookings.find({
             "vendor_id": str(vendor["_id"]),
-            "payment_status": "paid"
+            "payment_status": {
+                "$in": ["paid", "pending_payment", "waiting_admin_verification"]
+            }
         }).sort("event_date", 1)
     )
 

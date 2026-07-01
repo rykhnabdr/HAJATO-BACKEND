@@ -1,3 +1,4 @@
+import os  # 🟢 WAJIB: Untuk manajemen folder upload biner foto asli
 from flask import Flask, render_template, request, redirect, session, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -11,23 +12,36 @@ from services.notification_service import send_push_notification
 from services.log_service import create_activity_log
 from routes.notification_routes import notification_bp
 from routes.review_routes import review_bp
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # 🟢 Ditambahkan timedelta untuk durasi token
 from routes.activity_log_routes import activity_log_bp
+from routes.guest_routes import guest_bp
+from bson import ObjectId
+
+# ========================================================
+# 🟢 TAMBAHAN TAMU & ACARA: Import Blueprint Event Baru
+# ========================================================
+from routes.event_routes import event_bp
 
 from config.mail_config import mail
 
 import bcrypt
 import settings
 import config.firebase_config
-from services.notification_service import send_push_notification
 from routes.chat_routes import chat_bp
 
 app = Flask(__name__)
 app.secret_key = "SECRET_ADMIN"
 
-app.config["JWT_SECRET_KEY"] = settings.JWT_SECRET_KEY
-app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+# ── 🟢 CONFIG GLOBAL: Jalur Penyimpanan Folder Upload Gambar HP ───────
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Bikin sub-folder gallery otomatis di VPS/Laptop biar ga error pas simpan file
+os.makedirs(os.path.join(UPLOAD_FOLDER, 'gallery'), exist_ok=True)
+
+app.config["JWT_SECRET_KEY"] = settings.JWT_SECRET_KEY
+# ── 🟢 FIX TOKEN EXPIRED: Token dibikin aktif selama 30 hari biar ga bolak-balik login ──
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 
 app.config["MAIL_SERVER"] = settings.MAIL_SERVER
@@ -38,6 +52,8 @@ app.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 app.config["MAIL_DEFAULT_SENDER"] = settings.MAIL_USERNAME
 app.register_blueprint(notification_bp)
 app.register_blueprint(review_bp)
+# Registrasi route tamu
+app.register_blueprint(guest_bp, url_prefix="/api/guests")
 
 JWTManager(app)
 CORS(app)
@@ -49,6 +65,11 @@ app.register_blueprint(booking_bp)
 app.register_blueprint(payment_bp)
 
 app.register_blueprint(chat_bp)
+
+# ========================================================
+# 🟢 TAMBAHAN TAMU & ACARA: Daftarkan Blueprint Event API
+# ========================================================
+app.register_blueprint(event_bp, url_prefix="/api/events")
 
 users = db.users
 
@@ -67,9 +88,14 @@ def uploaded_file(filename):
     return send_from_directory("uploads", filename)
 
 
+# ── 🟢 ENDPOINT BARU: Agar Browser Bisa Akses Gambar Galeri Undangan ──
+@app.route("/uploads/gallery/<filename>")
+def uploaded_gallery_file(filename):
+    return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], 'gallery'), filename)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
-
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
@@ -102,11 +128,11 @@ def login():
             "user_id": str(user["_id"]),
             "email": user["email"],
             "name": user["name"],
-            "role": user["role"], # <--- Tambahan untuk mendeteksi role
+            "role": user["role"], 
             "action": "LOGIN",
             "timestamp": datetime.utcnow()
         }
-        db.activity_logs.insert_one(log_data) # <--- Ubah nama collection
+        db.activity_logs.insert_one(log_data) 
         print(f"\n[ACTIVITY LOG] 🟢 {user['role'].upper()} {user['email']} berhasil LOGIN pada {log_data['timestamp']} UTC\n")
 
         return redirect("/dashboard")
@@ -116,7 +142,6 @@ def login():
 
 @app.route("/dashboard")
 def dashboard():
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -167,7 +192,7 @@ def dashboard():
             "status": vendor.get("status", "pending")
         })
 
-# =========================
+    # =========================
     # LOG ACTIVITY (GLOBAL)
     # Mengambil 10 log terakhir campuran (Admin/User/Vendor)
     # =========================
@@ -180,7 +205,7 @@ def dashboard():
         
         recent_logs.append({
             "email": log.get("email", "-"),
-            "role": log.get("role", "unknown"), # <--- Tangkap role-nya
+            "role": log.get("role", "unknown"), 
             "action": log.get("action", "-"),
             "timestamp": waktu_str
         })
@@ -204,12 +229,11 @@ def dashboard():
         cat_values=[active_users, total_admins, total_vendors],
 
         pending_vendors=pending_vendors,
-        recent_logs=recent_logs  # <--- VARIABEL INI DIKIRIM KE HTML
+        recent_logs=recent_logs  
     )
 
 @app.route("/vendors")
 def vendors():
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -220,7 +244,6 @@ def vendors():
     vendors = []
 
     for vendor in vendor_data:
-
         user_email = "-"
 
         if vendor.get("user_id"):
@@ -261,7 +284,6 @@ def vendors():
 
 @app.route("/users")
 def users_page():
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -291,7 +313,6 @@ def users_page():
 
 @app.route("/bookings")
 def bookings_page():
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -327,7 +348,6 @@ def bookings_page():
 
 @app.route("/bookings/approve/<booking_id>", methods=["POST"])
 def approve_booking(booking_id):
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -347,7 +367,6 @@ def approve_booking(booking_id):
 
 @app.route("/bookings/reject/<booking_id>", methods=["POST"])
 def reject_booking(booking_id):
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -373,7 +392,6 @@ def uploaded_payment_proof(filename):
 
 @app.route("/bookings/release/<booking_id>", methods=["POST"])
 def release_payout(booking_id):
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -447,7 +465,6 @@ def release_payout(booking_id):
 
 @app.route("/vendors/approve/<vendor_id>", methods=["POST"])
 def approve_vendor_web(vendor_id):
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -507,7 +524,6 @@ def approve_vendor_web(vendor_id):
 
 @app.route("/vendors/reject/<vendor_id>", methods=["POST"])
 def reject_vendor_web(vendor_id):
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -567,7 +583,6 @@ def reject_vendor_web(vendor_id):
 
 @app.route("/vendors/edit/<vendor_id>", methods=["POST"])
 def edit_vendor(vendor_id):
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -639,7 +654,6 @@ def edit_vendor(vendor_id):
 
 @app.route("/vendors/delete/<vendor_id>", methods=["POST"])
 def delete_vendor(vendor_id):
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -669,7 +683,6 @@ def delete_vendor(vendor_id):
 
 @app.route("/reports")
 def reports():
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -681,7 +694,6 @@ def reports():
 
 @app.route("/settings")
 def settings_page():
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -693,22 +705,16 @@ def settings_page():
 
 @app.route("/logout")
 def logout():
-    # =========================
-    # TAMBAHAN: LOG ACTIVITY ADMIN LOGOUT (WEB)
-    # =========================
-# =========================
-    # LOG ACTIVITY (GLOBAL)
-    # =========================
     if "email" in session:
         log_data = {
             "user_id": session.get("user_id"),
             "email": session.get("email"),
             "name": session.get("name"),
-            "role": session.get("role"), # <--- Tambahan role
+            "role": session.get("role"), 
             "action": "LOGOUT",
             "timestamp": datetime.utcnow()
         }
-        db.activity_logs.insert_one(log_data) # <--- Ubah nama collection
+        db.activity_logs.insert_one(log_data) 
         print(f"\n[ACTIVITY LOG] 🔴 {session.get('role', '').upper()} {session.get('email')} melakukan LOGOUT pada {log_data['timestamp']} UTC\n")
 
     session.clear()
@@ -717,7 +723,6 @@ def logout():
 
 @app.route("/web-login", methods=["POST"])
 def web_login():
-
     data = request.get_json()
 
     email = data.get("email")
@@ -748,7 +753,6 @@ def web_login():
 
 @app.route("/test-notification", methods=["POST"])
 def test_notification():
-
     data = request.get_json()
 
     token = data.get("token")
@@ -775,7 +779,6 @@ def test_notification():
 
 @app.route("/logs")
 def activity_logs_page():
-
     if "user_id" not in session:
         return redirect("/login")
 
@@ -828,13 +831,15 @@ def activity_logs_page():
             "DELETE_REVIEW",
             "ADD_REVIEW",
         ],
+        "event": [                     
+            "CREATE_EVENT",
+            "UPDATE_EVENT",
+            "DELETE_EVENT"
+        ]
     }
 
     query = {}
 
-    # =========================
-    # FILTER ROLE
-    # =========================
     if selected_role == "admin":
         query["role"] = "admin"
 
@@ -849,9 +854,6 @@ def activity_logs_page():
             ]
         }
 
-    # =========================
-    # FILTER CATEGORY
-    # =========================
     if selected_category != "all":
         actions = category_actions.get(selected_category)
 
@@ -895,10 +897,179 @@ def activity_logs_page():
         selected_category=selected_category
     )
 
+# ==============================================================================
+#  🟢 ROUTE MEMBUKA UNDANGAN DIGITAL (FIX CLEAN & DINAMIS MURNI ALL TEMPLATE)
+# ==============================================================================
+@app.route('/api/events/rsvp/<event_id>', methods=['GET'])
+def render_rsvp_page(event_id):
+    try:
+        event_data = db.events.find_one({"_id": ObjectId(event_id)})
+        if not event_data:
+            return "<h1>Error 404</h1><p>Maaf, Undangan tidak ditemukan.</p>", 404
+            
+        # Menarik maksimal 3 komentar ucapan doa terbaru khusus untuk event_id ini
+        recent_comments = list(db.comments.find({"event_id": ObjectId(event_id)})
+                               .sort("created_at", -1)
+                               .limit(3))
+            
+        # Ambil field template dari database dokumen acara (default ke template_1)
+        pilihan_template = event_data.get('template', 'template_1')
+        
+        # Bersihkan string untuk mengambil nomor template-nya saja (misal: 'template_3' -> '3')
+        nomor_template = pilihan_template.replace('template_', '')
+        
+        # Pengecualian khusus: template_1 dipetakan ke undangan.html sesuai struktur foldermu
+        if nomor_template == '1':
+            nama_file_template = "undangan.html"
+        else:
+            nama_file_template = f"undangan_{nomor_template}.html"
+            
+        print(f"\n=== 📥 [HAJATO RENDER] Template: {pilihan_template} -> File Fisik: {nama_file_template} ===")
+        
+        # Render otomatis secara dinamis murni tanpa if-else berderet
+        return render_template(nama_file_template, event=event_data, comments=recent_comments)
+            
+    except Exception as e:
+        return f"<h1>Terjadi Kesalahan</h1><p>{str(e)}</p>", 500
+
+
+# ==============================================================================
+# 🟢 ROUTE: Menangani Pengiriman Form Doa Tamu Secara Asinkron (JSON)
+# ==============================================================================
+@app.route('/api/events/rsvp/<event_id>/comment', methods=['POST'])
+def submit_comment(event_id):
+    try:
+        nama_tamu = request.form.get('name')
+        ucapan_doa = request.form.get('message')
+
+        if not nama_tamu or not ucapan_doa:
+            return jsonify({"status": "error", "message": "Nama dan ucapan wajib diisi!"}), 400
+
+        # Simpan objek doa tamu baru ke dalam collection 'comments' MongoDB Atlas
+        db.comments.insert_one({
+            "event_id": ObjectId(event_id),
+            "name": nama_tamu.strip(),
+            "message": ucapan_doa.strip(),
+            "created_at": datetime.utcnow()
+        })
+
+        return jsonify({
+            "status": "success",
+            "message": "Ucapan doa berhasil disimpan!"
+        }), 201
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# ==============================================================================
+# 🟢 ENDPOINT STATS DASHBOARD FIXED PER ACARA (SINKRON DATA VENDOR)
+# ==============================================================================
+@app.route('/api/dashboard/stats', methods=['GET'])
+def get_dashboard_stats():
+    try:
+        event_id_str = request.args.get('event_id')
+        
+        query_filter = {}
+        nama_acara_aktif = "Aplikasi Hajato" 
+        is_fallback_active = False
+
+        # ── 🟢 1. VALIDASI & KUNCI FILTER UTAMA PER ACARA ──
+        if event_id_str and event_id_str.strip() != "" and ObjectId.is_valid(event_id_str):
+            query_filter = {"event_id": ObjectId(event_id_str)}
+            
+            try:
+                event_data = db.events.find_one({"_id": ObjectId(event_id_str)})
+                if event_data:
+                    nama_acara_aktif = event_data.get("name") or event_data.get("title") or event_data.get("nama_acara") or "Acara Tanpa Nama"
+            except Exception:
+                pass
+
+            if nama_acara_aktif == "Aplikasi Hajato":
+                tamu_pertama = db.guests.find_one(query_filter)
+                if tamu_pertama:
+                    nama_acara_aktif = f"Acara {tamu_pertama.get('name', 'Hajato')}"
+                else:
+                    nama_acara_aktif = f"Acara ID: {event_id_str[:6]}..."
+        else:
+            # Jika memori HP bener-bener kosong/belum milih acara
+            is_fallback_active = True
+
+        # ── 🟢 2. HITUNG DATA TAMU MURNI PER ACARA (SINKRON TIDAK GLOBAL) ──
+        if is_fallback_active:
+            total_guest = db.guests.count_documents({})
+            tamu_hadir = db.guests.count_documents({"status": "attended"})
+            recent_checked_in = list(db.guests.find({"status": "attended"}).limit(3))
+        else:
+            # Ambil total tamu yang terdaftar di event_id ini aja
+            total_guest = db.guests.count_documents(query_filter)
+            # Ambil tamu hadir yang statusnya attended DAN event_id-nya cocok
+            tamu_hadir_filter = {"status": "attended", "event_id": ObjectId(event_id_str)}
+            tamu_hadir = db.guests.count_documents(tamu_hadir_filter)
+            recent_checked_in = list(db.guests.find(tamu_hadir_filter).limit(3))
+
+        tamu_checkin = tamu_hadir
+
+        # ── 🟢 3. AMBIL DATA VENDOR PER ACARA (SUDAH FIX) ──
+        vendors_list = []
+        try:
+            if not is_fallback_active:
+                booking_cursor = db.bookings.find({"event_id": ObjectId(event_id_str)})
+                for b in booking_cursor:
+                    vendors_list.append({
+                        "name": b.get("vendor_name", "Nama Vendor"),
+                        "cat": b.get("package_name", "Kategori"),
+                        "status": b.get("booking_status", "pending"),
+                        "icon": "store"
+                    })
+        except Exception as e:
+            print(f"[ERROR VENDOR DASHBOARD STATS]: {str(e)}")
+            
+        # ── 🟢 4. AMBIL DATA AKTIVITAS MURNI PER ACARA DARI COLLECTION ASLI ──
+        activities_list = []
+        try:
+            # Ganti dari db.logs ke db.activity_logs (Sesuai collection log lo, Han)
+            log_query = {} if is_fallback_active else {"metadata.event_id": event_id_str}
+            activity_cursor = db.activity_logs.find(log_query).sort("timestamp", -1).limit(4)
+            for a in activity_cursor:
+                # Format waktu lampau simpel
+                waktu = a.get("timestamp")
+                waktu_str = waktu.strftime("%H:%M WIB") if waktu else "Baru saja"
+                
+                activities_list.append({
+                    "text": a.get("description", a.get("title", "Aktivitas tercatat")),
+                    "time": waktu_str
+                })
+        except Exception as e:
+            print(f"[ERROR LOG DASHBOARD STATS]: {str(e)}")
+            
+        # Generasi fallback text jika log aktivitas khusus acara masih kosong
+        if not activities_list:
+            for rg in recent_checked_in:
+                activities_list.append({
+                    "text": f"{rg.get('name', 'Tamu')} berhasil check-in via QR",
+                    "time": "Baru saja"
+                })
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "event_name": nama_acara_aktif, 
+                "total_guest": total_guest,
+                "tamu_hadir": tamu_hadir,
+                "tamu_checkin": tamu_checkin,
+                "total_vendor": len(vendors_list),
+                "total_booking": len(vendors_list),
+                "weekly_data": [total_guest, tamu_hadir, tamu_checkin, 0, 0, 0, 0],
+                "vendors": vendors_list,             
+                "recent_activities": activities_list 
+            }
+        }), 200
+    except Exception as e:
+        print(f"\n[CRASH FLASK] ERROR GAES: {str(e)}\n")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=5000,
         debug=True
     )
-

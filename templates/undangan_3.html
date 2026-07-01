@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Undangan Digital Premium - HAJATO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── 🔵 TEMA NAVY BLISS: Mengubah font & warna dasar menjadi Biru Malam & Perak ── */
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #dbe2ef; /* Warna latar dasar abu-abu kebiruan lembut */
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .inv-root {
+    width: 100%;
+    max-width: 480px;
+    background: #f9fbfd; /* Putih salju hangat */
+    min-height: 100vh;
+    color: #112240; /* Biru dongker gelap murni */
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── OPENING NAVY ── */
+  .inv-opening {
+    background: #0a192f; /* Biru Malam / Deep Ocean */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 2rem;
+    position: relative;
+  }
+  
+  .inv-opening-eyebrow {
+    font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
+    color: #64ffda; font-weight: 500; margin-bottom: 2rem;
+  }
+  .inv-opening-bismillah {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px; color: #f9fbfd; font-weight: 300;
+    letter-spacing: 1px; margin-bottom: 1.5rem; font-style: italic;
+  }
+  
+  .inv-ornament-row { display: flex; align-items: center; width: 100%; max-width: 200px; gap: 10px; margin-bottom: 1.5rem; }
+  .inv-ornament-line { flex: 1; height: 0.5px; background: #8892b0; opacity: 0.4; }
+  .inv-diamond { width: 8px; height: 8px; background: #64ffda; transform: rotate(45deg); flex-shrink: 0; }
+  
+  .inv-opening-names {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px; color: #f9fbfd; font-weight: 300; line-height: 1.1; margin-bottom: 0.5rem;
+  }
+  .inv-opening-sub { font-size: 14px; color: #8892b0; margin-bottom: 1rem; }
+  .inv-opening-date { font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #64ffda; margin-top: 1rem; font-weight: 300; }
+  
+  /* Tombol Buka Undangan Silver Perak */
+  .inv-open-btn {
+    margin-top: 2.5rem;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; border: 0.5px solid #64ffda; color: #64ffda;
+    border-radius: 99px; padding: 10px 28px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; transition: all 0.3s;
+  }
+  .inv-open-btn:hover { background: #64ffda; color: #0a192f; }
+
+  /* ── MAIN ── */
+  .inv-main { display: none; padding-bottom: 60px; }
+  .inv-main.visible { display: block; }
+
+  .inv-hero {
+    background: #0a192f; padding: 4rem 2rem; text-align: center;
+  }
+  .inv-hero-tag {
+    font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
+    color: #64ffda; font-weight: 500; margin-bottom: 1.5rem;
+  }
+  .inv-hero-name { font-family: 'Cormorant Garamond', serif; font-size: 38px; color: #f9fbfd; font-weight: 300; line-height: 1.15; margin-bottom: 0.35rem; }
+  .inv-hero-desc { font-size: 12px; color: #8892b0; font-weight: 300; margin-bottom: 2rem; line-height: 1.5; }
+  
+  .inv-hero-sep { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .inv-hero-sep span { width: 40px; height: 0.5px; background: #233554; }
+
+  /* Section */
+  .inv-section { padding: 3rem 1.75rem; border-bottom: 0.5px solid #e2e8f0; }
+  .inv-section:last-child { border-bottom: none; }
+  .inv-section.alt { background: #f0f4f8; }
+
+  /* Label Kategori */
+  .inv-slabel {
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: #1e3a8a; font-weight: 600; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .inv-slabel::after { content: ''; flex: 1; height: 0.5px; background: #cbd5e1; }
+
+  /* Kotak Ayat */
+  .inv-ayat { background: #0a192f; padding: 2rem 1.5rem; border-radius: 12px; text-align: center; }
+  .inv-ayat-arabic { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: #64ffda; font-weight: 300; line-height: 1.7; margin-bottom: 1rem; }
+  .inv-ayat-trans { font-size: 13px; color: #ccd6f6; font-style: italic; line-height: 1.65; margin-bottom: 1rem; }
+  .inv-ayat-source { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #64ffda; font-weight: 500; }
+
+  /* Layout Frame Foto Mempelai */
+  .couple-photos-row { display: flex; flex-direction: column; gap: 20px; }
+  .couple-and { text-align: center; font-family: 'Great Vibes', cursive; font-size: 32px; color: #1e3a8a; margin: 5px 0; }
+  .couple-photo-box { background: #fff; border: 0.5px solid #e2e8f0; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+  .couple-photo-box img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+  .couple-name-bar span { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: #0a192f; display: block; }
+  .couple-name-bar small { font-size: 12px; color: #62728f; }
+
+  /* Event Detail Cards */
+  .inv-event-cards { display: flex; flex-direction: column; gap: 14px; }
+  .inv-event-card { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.5rem 1.25rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+  .inv-event-card-icon {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: #f0f4f8; border: 0.5px solid #94a3b8;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 0.75rem; color: #1e3a8a; font-size: 18px;
+  }
+  .inv-event-card-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #1e3a8a; font-weight: 500; margin-bottom: 6px; }
+  .inv-event-card-val { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: #0a192f; font-weight: 600; }
+  .inv-event-card-sub { font-size: 12px; color: #62728f; margin-top: 6px; }
+
+  /* Hitung Mundur Kotak Navy */
+  .inv-countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .inv-cd-box { background: #0a192f; border-radius: 10px; padding: 1rem 0.5rem; text-align: center; }
+  .inv-cd-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: #64ffda; font-weight: 300; }
+  .inv-cd-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #8892b0; margin-top: 4px; }
+
+  /* Rundown List */
+  .inv-agenda-list { display: flex; flex-direction: column; gap: 10px; }
+  .inv-agenda-row { display: flex; align-items: center; gap: 12px; background: #fff; border: 0.5px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+  .inv-agenda-dot { width: 6px; height: 6px; border-radius: 50%; background: #64ffda; flex-shrink: 0; }
+  .inv-agenda-time { font-size: 12px; font-weight: 500; color: #1e3a8a; min-width: 90px; }
+  .inv-agenda-act { font-size: 13px; color: #0a192f; }
+
+  /* RSVP Ucapan & Doa */
+  .inv-rsvp-area { background: #0a192f; border-radius: 16px; padding: 1.75rem; }
+  .inv-rsvp-sub { font-size: 12px; color: #8892b0; margin-bottom: 1.5rem; text-align: center; }
+  .inv-input {
+    display: block; width: 100%;
+    background: #112240; border: 0.5px solid #233554;
+    border-radius: 8px; color: #f9fbfd; padding: 12px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif; margin-bottom: 12px;
+  }
+  .inv-input::placeholder { color: #4b5875; }
+  .inv-input:focus { outline: none; border-color: #64ffda; }
+  
+  .inv-send-btn {
+    display: block; width: 100%; padding: 12px;
+    background: #64ffda; border: none; border-radius: 8px; color: #0a192f;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+  }
+
+  .inv-ucapan-list { display: flex; flex-direction: column; gap: 10px; margin-top: 1.5rem; }
+  .inv-ucapan-item { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; border-left: 3px solid #64ffda; }
+  .inv-ucapan-name { font-size: 13px; font-weight: 600; color: #0a192f; margin-bottom: 4px; }
+  .inv-ucapan-msg { font-size: 12px; color: #1e3a8a; line-height: 1.5; font-style: italic; }
+
+  /* Hadiah / Amplop */
+  .inv-amplop { border: 0.5px solid #94a3b8; border-radius: 12px; padding: 1.75rem 1.25rem; background: #fff; text-align: center; }
+  .inv-amplop-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: #f0f4f8; border: 0.5px solid #94a3b8;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 0.75rem; color: #1e3a8a; font-size: 22px;
+  }
+  .inv-amplop-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: #0a192f; font-weight: 600; margin-bottom: 4px; }
+  .inv-amplop-sub { font-size: 12px; color: #62728f; margin-bottom: 1rem; }
+  .inv-rekening-val { font-size: 16px; font-weight: 700; color: #0a192f; letter-spacing: 0.5px; margin-bottom: 1.25rem; }
+  .inv-amplop-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #0a192f; color: #64ffda; border: none; border-radius: 8px;
+    padding: 10px 24px; font-size: 12px; letter-spacing: 1px;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; text-decoration: none;
+  }
+
+  /* Footer */
+  .inv-footer { background: #0a192f; padding: 3.5rem 2rem; text-align: center; color: #f9fbfd; }
+  .inv-footer-names { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: #f9fbfd; font-weight: 300; margin-bottom: 0.5rem; }
+  .inv-footer-sub { font-size: 12px; color: #8892b0; margin-bottom: 2rem; }
+  .inv-footer-divider { height: 0.5px; background: #233554; margin-bottom: 1.5rem; }
+  
+  .inv-footer-share { display: flex; justify-content: center; gap: 10px; }
+  .inv-share-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 0.5px solid #233554; border-radius: 8px;
+    padding: 10px 18px; color: #64ffda; background: transparent;
+    font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  }
+  .inv-footer-credit { margin-top: 2rem; font-size: 10px; letter-spacing: 2px; color: #233554; text-transform: uppercase; }
+
+  /* Music Bar */
+  .inv-music-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    background: #0a192f; border-top: 0.5px solid #233554;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 1.5rem; z-index: 100;
+  }
+  .inv-music-title { font-size: 12px; color: #64ffda; }
+  .inv-music-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 0.5px solid #64ffda; background: transparent;
+    color: #64ffda; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  </style>
+</head>
+<body>
+<div class="inv-root">
+
+  <!-- ══ OPENING ══ -->
+  <div class="inv-opening" id="invOpening">
+    <div class="inv-opening-content">
+      <div class="inv-opening-eyebrow">✦ Undangan Pernikahan ✦</div>
+      <div class="inv-opening-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</div>
+      <div class="inv-ornament-row">
+        <div class="inv-ornament-line"></div>
+        <div class="inv-diamond"></div>
+        <div class="inv-ornament-line"></div>
+      </div>
+      <div class="inv-opening-names">{{ event.name|string if event.name else '-' }}</div>
+      <div class="inv-opening-sub">& Keluarga Besar</div>
+      <div class="inv-opening-date">{{ event.date|string if event.date else '-' }}</div>
+      <button class="inv-open-btn" onclick="openInvitation()">
+        <i class="ti ti-envelope-open"></i> Buka Undangan
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ MAIN ══ -->
+  <div class="inv-main" id="invMain">
+
+    <!-- HERO -->
+    <div class="inv-hero">
+      <div class="inv-hero-content">
+        <div class="inv-hero-tag">Walimatul 'Ursy</div>
+        <div class="inv-hero-name">{{ event.name|string if event.name else '-' }}</div>
+        <div class="inv-hero-desc">
+          {% if event.description and event.description.strip() != "" %}
+            {{ event.description|string }}
+          {% else %}
+            Mengundang Kehadiran Anda dalam Acara Pernikahan Kami
+          {% endif %}
+        </div>
+        <div class="inv-hero-sep">
+          <span></span>
+          <i class="ti ti-heart" style="color: #64ffda; font-size: 12px;"></i>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ayat -->
+    <div class="inv-section" style="background:#fff;">
+      <div class="inv-ayat">
+        <div class="inv-ayat-arabic">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّnْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَرَحْمَةً</div>
+        <div class="inv-ayat-trans">"Dan di antara tanda-tanda kekuasaan-Nya, Dia menciptakan untukmu pasangan hidup dari jenismu sendiri agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang."</div>
+        <div class="inv-ayat-source">QS. Ar-Rum : 21</div>
+      </div>
+    </div>
+
+    <!-- Foto Mempelai -->
+    <div class="inv-section" style="background:#fff;">
+      <div class="inv-slabel">Kedua Mempelai</div>
+      <div class="couple-photos-row">
+        <div class="couple-photo-box">
+          {% if event.gallery and event.gallery|length >= 1 %}
+            <img src="/uploads/gallery/{{ event.gallery[0] }}" onerror="this.src='https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400';" alt="Mempelai Pria">
+          {% else %}
+            <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400" alt="Mempelai Pria">
+          {% endif %}
+          <div class="couple-name-bar">
+            <span>Mempelai Pria</span>
+            <small>Putra Terbaik Keluarga Besar</small>
+          </div>
+        </div>
+        <div class="couple-and">&</div>
+        <div class="couple-photo-box">
+          {% if event.gallery and event.gallery|length >= 2 %}
+            <img src="/uploads/gallery/{{ event.gallery[1] }}" onerror="this.src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400';" alt="Mempelai Wanita">
+          {% else %}
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400" alt="Mempelai Wanita">
+          {% endif %}
+          <div class="couple-name-bar">
+            <span>Mempelai Wanita</span>
+            <small>Putri Terbaik Keluarga Besar</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Acara -->
+    <div class="inv-section">
+      <div class="inv-slabel">Detail Acara</div>
+      <div class="inv-event-cards">
+        <div class="inv-event-card">
+          <div class="inv-event-card-icon"><i class="ti ti-calendar-event"></i></div>
+          <div class="inv-event-card-label">Hari & Tanggal</div>
+          <div class="inv-event-card-val">{{ event.date|string if event.date else '-' }}</div>
+          <div class="inv-event-card-sub">Waktu: {{ event.time|string if event.time else '09:00 - Selesai' }}</div>
+        </div>
+        <div class="inv-event-card">
+          <div class="inv-event-card-icon"><i class="ti ti-map-pin"></i></div>
+          <div class="inv-event-card-label">Lokasi Acara</div>
+          <div class="inv-event-card-val">{{ event.location|string if event.location else '-' }}</div>
+          <div class="inv-event-card-sub" style="margin-top: 10px;">
+            <a href="http://maps.google.com/?q={{ (event.location|string)|urlencode }}" target="_blank"
+               style="display: inline-block; background: #0a192f; color: #64ffda; padding: 6px 14px; border-radius: 6px; text-decoration:none; font-size:11px;">Buka Google Maps →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Countdown -->
+    <div class="inv-section alt">
+      <div class="inv-slabel">Hitung Mundur</div>
+      <div class="inv-countdown">
+        <div class="inv-cd-box"><div class="inv-cd-num" id="cdDays">--</div><div class="inv-cd-label">Hari</div></div>
+        <div class="inv-cd-box"><div class="inv-cd-num" id="cdHours">--</div><div class="inv-cd-label">Jam</div></div>
+        <div class="inv-cd-box"><div class="inv-cd-num" id="cdMins">--</div><div class="inv-cd-label">Menit</div></div>
+        <div class="inv-cd-box"><div class="inv-cd-num" id="cdSecs">--</div><div class="inv-cd-label">Detik</div></div>
+      </div>
+    </div>
+
+    <!-- Rundown Acara -->
+    <div class="inv-section">
+      <div class="inv-slabel">Rundown Acara</div>
+      <div class="inv-agenda-list">
+        {% if event.rundown %}
+          {% for item in event.rundown %}
+          <div class="inv-agenda-row">
+            <div class="inv-agenda-dot"></div>
+            <div class="inv-agenda-time">{{ item.time|string }}</div>
+            <div class="inv-agenda-act">{{ item.activity|string }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="inv-agenda-row">
+          <div class="inv-agenda-dot"></div>
+          <div class="inv-agenda-time">09.00 – 10.30</div>
+          <div class="inv-agenda-act">Prosesi Akad Nikah Resmi</div>
+        </div>
+        <div class="inv-agenda-row">
+          <div class="inv-agenda-dot"></div>
+          <div class="inv-agenda-time">10.30 – 13.00</div>
+          <div class="inv-agenda-act">Resepsi Pernikahan & Ramah Tamah</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Ucapan & Doa -->
+    <div class="inv-section alt">
+      <div class="inv-slabel">Ucapan & Doa Tamu</div>
+      <div class="inv-rsvp-area">
+        <div class="inv-rsvp-sub">Sampaikan doa restu terbaik Anda untuk kedua mempelai</div>
+        <form id="commentForm" onsubmit="kirimDoaTamu(event)">
+          <input class="inv-input" placeholder="Nama Anda" id="ucapanName" name="name" required>
+          <textarea class="inv-input" rows="3" placeholder="Tuliskan doa restu di sini..." id="ucapanMsg" name="message" style="resize:none;" required></textarea>
+          <button type="submit" class="inv-send-btn" id="btnKirimDoa">
+            <i class="ti ti-heart" style="margin-right:6px"></i> Kirim Ucapan
+          </button>
+        </form>
+      </div>
+      <div class="inv-ucapan-list" id="ucapanList">
+        {% if comments %}
+          {% for c in comments %}
+          <div class="inv-ucapan-item">
+            <div class="inv-ucapan-name">{{ c.name|string }}</div>
+            <div class="inv-ucapan-msg">"{{ c.message|string }}"</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p id="noCommentText" style="font-size:11px;color:#62728f;text-align:center;font-style:italic;margin-top:10px;">
+            Belum ada ucapan doa dari tamu undangan.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Amplop Digital -->
+    <div class="inv-section">
+      <div class="inv-slabel">Hadiah Pernikahan</div>
+      <div class="inv-amplop">
+        <div class="inv-amplop-icon"><i class="ti ti-gift"></i></div>
+        <div class="inv-amplop-title">Amplop Digital</div>
+        <div class="inv-amplop-sub">Info rekening untuk tanda kasih hadiah digital:</div>
+        <div class="inv-rekening-val">{{ event.rekening|string if event.rekening else '-' }}</div>
+        <button class="inv-amplop-btn" onclick="salinRekening()">
+          <i class="ti ti-copy" style="margin-right:4px;"></i> Salin Info Rekening
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="inv-footer">
+      <div class="inv-footer-names">{{ event.name|string if event.name else '-' }}</div>
+      <div class="inv-footer-sub">{{ event.date|string if event.date else '-' }} · {{ event.location|string if event.location else '-' }}</div>
+      <div class="inv-footer-divider"></div>
+      <div class="inv-footer-share">
+        <button class="inv-share-btn" onclick="shareWA()">
+          <i class="ti ti-brand-whatsapp"></i> WhatsApp
+        </button>
+        <button class="inv-share-btn" onclick="copyLink()">
+          <i class="ti ti-copy"></i> Salin Link
+        </button>
+      </div>
+      <div class="inv-footer-credit">Dibuat menggunakan HAJATO</div>
+    </div>
+
+  </div><!-- /inv-main -->
+
+  <!-- Music Bar -->
+  <div class="inv-music-bar" id="musicBar" style="display:none;">
+    <div class="inv-music-title">
+      <i class="ti ti-music" style="margin-right:5px"></i> Sholawat Badar Instrument
+    </div>
+    <button class="inv-music-btn" id="musicBtn" onclick="toggleMusic()">
+      <i class="ti ti-player-play" id="musicIcon"></i>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  let musicPlaying = false;
+
+  function openInvitation() {
+    document.getElementById('invOpening').style.display = 'none';
+    document.getElementById('invMain').classList.add('visible');
+    document.getElementById('musicBar').style.display = 'flex';
+    startCountdown();
+  }
+
+  function kirimDoaTamu(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById('ucapanName');
+    const msgInput  = document.getElementById('ucapanMsg');
+    const btnKirim  = document.getElementById('btnKirimDoa');
+    const name      = nameInput.value.trim();
+    const message   = msgInput.value.trim();
+    if (!name || !message) { alert('Mohon isi nama dan ucapan Anda.'); return; }
+
+    btnKirim.disabled = true;
+    btnKirim.innerHTML = 'Mengirim...';
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('message', message);
+
+    fetch('/api/events/rsvp/{{ event._id|string }}/comment', { method: 'POST', body: formData })
+      .then(response => {
+        if (response.ok) {
+          const list          = document.getElementById('ucapanList');
+          const noCommentText = document.getElementById('noCommentText');
+          if (noCommentText) noCommentText.remove();
+
+          const newItem = document.createElement('div');
+          newItem.className = 'inv-ucapan-item';
+          newItem.innerHTML = `
+            <div class="inv-ucapan-name">${name}</div>
+            <div class="inv-ucapan-msg">"${message}"</div>
+          `;
+          list.insertBefore(newItem, list.firstChild);
+          if (list.children.length > 3) list.lastChild.remove();
+
+          nameInput.value = '';
+          msgInput.value  = '';
+          alert('Terima kasih! Ucapan doa Anda berhasil dikirim.');
+        } else {
+          alert('Gagal mengirim ucapan. Silakan coba lagi.');
+        }
+      })
+      .catch(() => alert('Terjadi kesalahan koneksi ke server.'))
+      .finally(() => {
+        btnKirim.disabled = false;
+        btnKirim.innerHTML = '<i class="ti ti-heart" style="margin-right:6px"></i> Kirim Ucapan';
+      });
+  }
+
+  function salinRekening() {
+    const teks = "{{ event.rekening|string if event.rekening else '' }}";
+    if (!teks || teks === '-') { alert('Info rekening belum diatur.'); return; }
+    navigator.clipboard.writeText(teks)
+      .then(() => alert('Info rekening berhasil disalin!'))
+      .catch(() => alert('Gagal menyalin info rekening.'));
+  }
+
+  function toggleMusic() {
+    musicPlaying = !musicPlaying;
+    document.getElementById('musicIcon').className = musicPlaying ? 'ti ti-player-pause' : 'ti ti-player-play';
+  }
+
+  function shareWA() {
+    window.open('https://wa.me/?text=' + encodeURIComponent('Anda diundang ke acara kami! Buka undangan di: ' + window.location.href), '_blank');
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => alert('Link undangan berhasil disalin!'))
+      .catch(() => alert('Gagal menyalin link.'));
+  }
+
+  function startCountdown() {
+    const raw = '{{ event.date|string if event.date else "" }}';
+    const parts = raw.match(/\d+/g);
+    let target;
+    if (parts && parts.length >= 3) {
+      target = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    } else {
+      target = new Date(Date.now() + 30 * 24 * 3600 * 1000);
+    }
+    function tick() {
+      const diff = target - new Date();
+      if (diff <= 0) {
+        ['cdDays','cdHours','cdMins','cdSecs'].forEach(id => document.getElementById(id).textContent = '00');
+        return;
+      }
+      document.getElementById('cdDays').textContent  = String(Math.floor(diff / 86400000)).padStart(2,'0');
+      document.getElementById('cdHours').textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2,'0');
+      document.getElementById('cdMins').textContent  = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
+      document.getElementById('cdSecs').textContent  = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+</script>
+</body>
+</html>
