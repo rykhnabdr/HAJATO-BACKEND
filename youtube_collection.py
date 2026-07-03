@@ -42,7 +42,7 @@ mongo_client = MongoClient(
     serverSelectionTimeoutMS=10000
 )
 
-database = mongo_client["bigdata_vendor_hajatan"]
+database = mongo_client["hajato_db"]
 collection = database["youtube_vendor"]
 
 # Mengecek koneksi
