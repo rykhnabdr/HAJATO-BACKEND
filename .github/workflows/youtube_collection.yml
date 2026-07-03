@@ -1,0 +1,34 @@
+name: Automated YouTube Collection
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 8 * * *"
+      timezone: "Asia/Jakarta"
+
+permissions:
+  contents: read
+
+jobs:
+  collect-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil kode repository
+        uses: actions/checkout@v6
+
+      - name: Siapkan Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install library
+        run: pip install -r requirements.txt
+
+      - name: Jalankan collection YouTube
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: python youtube_collection.py
