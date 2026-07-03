@@ -110,6 +110,7 @@ def create_midtrans_payment(booking_id):
 
 
 @payment_bp.route("/notification", methods=["POST"])
+@jwt_required(optional=True)
 def midtrans_notification():
 
     data = request.get_json()
@@ -120,6 +121,8 @@ def midtrans_notification():
         }), 400
 
     order_id = data.get("order_id")
+    print(f"DEBUG: order_id yang diterima adalah -> '{order_id}'")
+    
     transaction_status = data.get("transaction_status")
 
     print("MIDTRANS CALLBACK:", data)
@@ -129,8 +132,14 @@ def midtrans_notification():
             "message": "Order ID tidak ditemukan"
         }), 400
 
+    # Mencari data yang di dalam field midtrans_order_id-nya mengandung string order_id dari callback
+    # Ini bakal bypass kalau ada masalah tanda kutip ganda atau timestamp beda tipis
     booking = bookings.find_one({
-        "midtrans_order_id": order_id
+        "$or": [
+            {"midtrans_order_id": order_id},
+            {"midtrans_order_id": {"$regex": order_id.strip().replace('"', '')}},
+            {"_id": ObjectId(order_id.split('-')[1]) if '-' in order_id else ObjectId()}
+        ]
     })
 
     if not booking:

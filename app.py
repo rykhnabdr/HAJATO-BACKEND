@@ -145,42 +145,19 @@ def dashboard():
     if "user_id" not in session:
         return redirect("/login")
 
-    total_vendors = db.vendor_registrations.count_documents({
-        "status": "approved"
-    })
+    total_vendors = db.vendor_registrations.count_documents({"status": "approved"})
+    pending_approvals = db.vendor_registrations.count_documents({"status": "pending"})
+    rejected_vendors = db.vendor_registrations.count_documents({"status": "rejected"})
+    active_users = users.count_documents({"role": "user"})
+    total_admins = users.count_documents({"role": "admin"})
 
-    pending_approvals = db.vendor_registrations.count_documents({
-        "status": "pending"
-    })
-
-    rejected_vendors = db.vendor_registrations.count_documents({
-        "status": "rejected"
-    })
-
-    active_users = users.count_documents({
-        "role": "user"
-    })
-
-    total_admins = users.count_documents({
-        "role": "admin"
-    })
-
-    pending_data = list(
-        db.vendor_registrations.find({
-            "status": "pending"
-        }).sort("_id", -1).limit(5)
-    )
-
+    pending_data = list(db.vendor_registrations.find({"status": "pending"}).sort("_id", -1).limit(5))
     pending_vendors = []
 
     for vendor in pending_data:
         user_email = "-"
-
         if vendor.get("user_id"):
-            user_data = users.find_one({
-                "_id": ObjectId(vendor["user_id"])
-            })
-
+            user_data = users.find_one({"_id": ObjectId(vendor["user_id"])})
             if user_data:
                 user_email = user_data.get("email", "-")
 
@@ -192,23 +169,52 @@ def dashboard():
             "status": vendor.get("status", "pending")
         })
 
-    # =========================
-    # LOG ACTIVITY (GLOBAL)
-    # Mengambil 10 log terakhir campuran (Admin/User/Vendor)
-    # =========================
     raw_logs = list(db.activity_logs.find().sort("timestamp", -1).limit(10))
     recent_logs = []
     
     for log in raw_logs:
         waktu = log.get("timestamp")
         waktu_str = waktu.strftime("%d %b %Y, %H:%M:%S") if waktu else "-"
-        
         recent_logs.append({
             "email": log.get("email", "-"),
             "role": log.get("role", "unknown"), 
             "action": log.get("action", "-"),
             "timestamp": waktu_str
         })
+
+# ==========================================
+# 🟢 DATA GRAFIK LAYANAN TOP 5 (UNTUK GRAFIK BARU)
+# ==========================================
+    pipeline_chart = [
+        {
+            "$group": {
+                "_id": "$package_name", 
+                "vendor_name": {"$first": "$vendor_name"}, # 🟢 Tarik nama vendornya juga
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"count": -1}},
+        {"$limit": 5}
+    ]
+    top_services = list(db.bookings.aggregate(pipeline_chart))
+
+    service_labels = []
+    service_values = []
+    
+    for svc in top_services:
+        nama_layanan = svc.get("_id")
+        nama_vendor = svc.get("vendor_name", "-")
+        
+        if not nama_layanan:
+            nama_layanan = "Lainnya"
+            
+        # 🟢 Format List dalam List: Membuat teks di grafik Chart.js menjadi 2 baris
+        service_labels.append([nama_layanan, f"({nama_vendor})"])
+        service_values.append(svc.get("count", 0))
+
+    if not service_labels:
+        service_labels = [["Belum ada pesanan", "(-)"]]
+        service_values = [0]
 
     stats = {
         "total_vendors": total_vendors,
@@ -222,11 +228,15 @@ def dashboard():
         active_page="dashboard",
         stats=stats,
 
+        # Data untuk grafik lama (User Growth & Statistik User)
         growth_labels=["Users", "Admins", "Vendors"],
         growth_values=[active_users, total_admins, total_vendors],
-
         cat_labels=["Users", "Admins", "Vendors"],
         cat_values=[active_users, total_admins, total_vendors],
+
+        # Data untuk grafik baru (Layanan)
+        service_labels=service_labels,
+        service_values=service_values,
 
         pending_vendors=pending_vendors,
         recent_logs=recent_logs  
@@ -1066,6 +1076,55 @@ def get_dashboard_stats():
     except Exception as e:
         print(f"\n[CRASH FLASK] ERROR GAES: {str(e)}\n")
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+
+# ==============================================================================
+# 🟢 ROUTE BARU: API TOTAL LAYANAN & LAYANAN TERBANYAK (DASHBOARD ADMIN WEB)
+# ==============================================================================
+@app.route('/api/stats/services', methods=['GET'])
+def get_service_stats_web():
+    try:
+        # 1. Menghitung total layanan unik dari collection bookings berdasarkan package_name
+        # (Atau jika kamu punya db.packages, bisa ganti jadi db.packages.count_documents({}))
+        unik_packages = db.bookings.distinct("package_name")
+        total_services = len(unik_packages)
+        
+        # 2. Mencari paket/layanan yang paling sering di-booking
+        pipeline = [
+            {
+                "$group": {
+                    "_id": "$package_name", 
+                    "totalOrders": {"$sum": 1},
+                    "vendor_name": {"$first": "$vendor_name"} # Ambil nama vendor dari data booking
+                }
+            },
+            {"$sort": {"totalOrders": -1}},
+            {"$limit": 1}
+        ]
+        
+        popular_result = list(db.bookings.aggregate(pipeline))
+        
+        popular_service = "Belum ada"
+        popular_vendor = "-"
+        
+        # Jika ada transaksi booking, ambil data peringkat 1
+        if popular_result and popular_result[0].get("_id"):
+            popular_service = popular_result[0]["_id"]
+            popular_vendor = popular_result[0].get("vendor_name", "-")
+            
+        return jsonify({
+            "total_services": total_services,
+            "popular_service": popular_service,
+            "popular_vendor": popular_vendor
+        }), 200
+        
+    except Exception as e:
+        print(f"[ERROR SERVICE STATS WEB]: {str(e)}")
+        return jsonify({
+            "total_services": 0, 
+            "popular_service": "Gagal memuat", 
+            "popular_vendor": "-"
+        }), 500
 
 if __name__ == "__main__":
     app.run(

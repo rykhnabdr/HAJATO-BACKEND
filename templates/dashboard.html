@@ -7,7 +7,6 @@
         <p class="text-muted">Welcome back! Here's what's happening today.</p>
     </div>
 
-    <!-- STAT CARDS -->
     <div class="stat-grid">
         <div class="glass-card">
             <div class="stat-header">
@@ -25,19 +24,19 @@
         </div>
         
         <div class="glass-card">
-    <div class="stat-header">
-        <div>
-            <div class="stat-value">{{ stats.rejected_vendors }}</div>
-            <div class="stat-label">Rejected Vendors</div>
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.rejected_vendors }}</div>
+                    <div class="stat-label">Rejected Vendors</div>
+                </div>
+                <div class="stat-icon icon-blue">
+                    <i class='bx bx-x-circle'></i>
+                </div>
+            </div>
+            <div class="stat-trend trend-down">
+                Vendor ditolak
+            </div>
         </div>
-        <div class="stat-icon icon-blue">
-            <i class='bx bx-x-circle'></i>
-        </div>
-    </div>
-    <div class="stat-trend trend-down">
-        Vendor ditolak
-    </div>
-</div>
 
         <div class="glass-card">
             <div class="stat-header">
@@ -68,9 +67,40 @@
                 <i class='bx bx-trending-down'></i> -2% from last month
             </div>
         </div>
+
+        <div class="glass-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="total-services-val">-</div>
+                    <div class="stat-label">Total Layanan</div>
+                </div>
+                <div class="stat-icon icon-blue" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class='bx bx-layer'></i>
+                </div>
+            </div>
+            <div class="stat-trend trend-up" style="color: #22c55e;">
+                <i class='bx bx-check-circle'></i> Aktif di platform
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="popular-service-val" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">
+                        Loading...
+                    </div>
+                    <div class="stat-label">Layanan Terbanyak</div>
+                </div>
+                <div class="stat-icon icon-purple" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                    <i class='bx bx-crown'></i>
+                </div>
+            </div>
+            <div class="stat-trend trend-down" style="color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px;">
+                Vendor: <span id="popular-vendor-val" style="color: #fff; font-weight: 600;">-</span>
+            </div>
+        </div>
     </div>
 
-    <!-- CHARTS GRID -->
     <div class="charts-grid">
         <div class="glass-card">
             <div class="card-header">
@@ -81,15 +111,28 @@
                 <canvas id="growthChart"></canvas>
             </div>
         </div>
+        
         <div class="glass-card">
             <div class="card-header">
-                <h3 class="card-title">Total User</h3>
+                <h3 class="card-title">Statistik User</h3>
                 <button class="action-btn"><i class='bx bx-dots-vertical-rounded'></i></button>
             </div>
             <div class="chart-container">
                 <canvas id="categoryChart"></canvas>
             </div>
-    <!-- PENDING VENDORS TABLE -->
+        </div>
+    </div>
+
+    <div class="glass-card" style="margin-top: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">Layanan Paling Banyak Dipesan (Top 5)</h3>
+            <button class="action-btn"><i class='bx bx-bar-chart-alt-2'></i></button>
+        </div>
+        <div class="chart-container" style="height: 300px;">
+            <canvas id="serviceChart"></canvas>
+        </div>
+    </div>
+
     <div class="glass-card" style="margin-top: 24px;">
         <div class="card-header">
             <h3 class="card-title">Pending Vendor Approvals</h3>
@@ -142,26 +185,30 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Hidden div to hold data safely for Javascript parsing -->
 <div id="chartDataContainer" style="display: none;" 
      data-growth-labels="{{ growth_labels | tojson | forceescape }}"
      data-growth-values="{{ growth_values | tojson | forceescape }}"
      data-cat-labels="{{ cat_labels | tojson | forceescape }}"
-     data-cat-values="{{ cat_values | tojson | forceescape }}">
+     data-cat-values="{{ cat_values | tojson | forceescape }}"
+     data-service-labels="{{ service_labels | default([]) | tojson | forceescape }}"
+     data-service-values="{{ service_values | default([]) | tojson | forceescape }}">
 </div>
 
 <script>
-    // Safely parse data from the hidden div to prevent IDE syntax errors
+    // Safely parse data from the hidden div
     const chartDataEl = document.getElementById('chartDataContainer');
     const growthLabels = JSON.parse(chartDataEl.dataset.growthLabels);
     const growthValues = JSON.parse(chartDataEl.dataset.growthValues);
     const catLabels = JSON.parse(chartDataEl.dataset.catLabels);
     const catValues = JSON.parse(chartDataEl.dataset.catValues);
+    const serviceLabels = JSON.parse(chartDataEl.dataset.serviceLabels);
+    const serviceValues = JSON.parse(chartDataEl.dataset.serviceValues);
+    
     // Chart text color config for dark theme
     Chart.defaults.color = '#8c909e';
     Chart.defaults.font.family = 'Outfit, sans-serif';
 
-    // Growth Line Chart
+    // 1. Growth Line Chart
     const growthCtx = document.getElementById('growthChart').getContext('2d');
     new Chart(growthCtx, {
         type: 'line',
@@ -184,22 +231,15 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }
-                },
-                x: {
-                    grid: { display: false, drawBorder: false }
-                }
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } },
+                x: { grid: { display: false, drawBorder: false } }
             }
         }
     });
 
-    // Category Doughnut Chart
+    // 2. Category Doughnut Chart (Statistik User)
     const catCtx = document.getElementById('categoryChart').getContext('2d');
     new Chart(catCtx, {
         type: 'doughnut',
@@ -207,16 +247,7 @@
             labels: catLabels,
             datasets: [{
                 data: catValues,
-                backgroundColor: [
-                    '#3b82f6',
-                    '#FF7A00',
-                    '#2eac6d',
-                    '#8b5cf6',
-                    '#ec4899',
-                    '#eab308',
-                    '#14b8a6',
-                    '#f43f5e'
-                ],
+                backgroundColor: ['#3b82f6', '#FF7A00', '#2eac6d'],
                 borderWidth: 0,
                 hoverOffset: 4
             }]
@@ -228,14 +259,88 @@
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
+                    labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' }
                 }
             }
         }
     });
+
+// 3. 🟢 NEW: Service Bar Chart (Top 5 Layanan)
+    const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+    
+    // Bikin efek gradient agar batang grafik memudar ke bawah (Figma-style)
+    const gradientPurple = serviceCtx.createLinearGradient(0, 0, 0, 300);
+    gradientPurple.addColorStop(0, 'rgba(139, 92, 246, 0.9)'); // Ungu solid di pucuk
+    gradientPurple.addColorStop(1, 'rgba(139, 92, 246, 0.05)'); // Hampir transparan di bawah
+
+    new Chart(serviceCtx, {
+        type: 'bar',
+        data: {
+            labels: serviceLabels,
+            datasets: [{
+                label: 'Total Pesanan',
+                data: serviceValues,
+                backgroundColor: gradientPurple,
+                borderColor: '#8b5cf6',
+                // Cuma beri garis tajam di ujung atas batangnya saja
+                borderWidth: { top: 2, right: 0, bottom: 0, left: 0 }, 
+                borderRadius: { topLeft: 4, topRight: 4 }, // Melengkung di atas saja
+                maxBarThickness: 45 // 🟢 KUNCI UTAMA: Batang tidak akan gendut walau layar lebar
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 17, 21, 0.9)', // Warna gelap khas dashboardmu
+                    titleColor: '#fff',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false, // Menghilangkan kotak warna di tooltip
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { stepSize: 1, color: '#64748b' }, // Font angka disesuaikan
+                    grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } 
+                },
+                x: { 
+                    ticks: { 
+                        color: '#94a3b8', 
+                        font: { size: 12 },
+                        padding: 10
+                    },
+                    grid: { display: false, drawBorder: false } 
+                }
+            }
+        }
+    });
+
+    // FETCH DATA LAYANAN DARI API UNTUK KOTAK KECIL
+    async function loadServiceStats() {
+        try {
+            const response = await fetch('/api/stats/services'); 
+            if (!response.ok) throw new Error('Network error');
+            const data = await response.json();
+            
+            document.getElementById('total-services-val').innerText = data.total_services ?? 0;
+            document.getElementById('popular-service-val').innerText = data.popular_service ?? 'Belum ada';
+            document.getElementById('popular-service-val').title = data.popular_service ?? '';
+            document.getElementById('popular-vendor-val').innerText = data.popular_vendor ?? '-';
+        } catch (error) {
+            console.error("Gagal memuat data API layanan:", error);
+            document.getElementById('total-services-val').innerText = "0";
+            document.getElementById('popular-service-val').innerText = "Belum Ada Data";
+            document.getElementById('popular-vendor-val').innerText = "-";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadServiceStats);
 </script>
 {% endblock %}

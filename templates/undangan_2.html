@@ -217,11 +217,35 @@
     color: #a4b39e; font-size: 14px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
   }
+
+  /* ── MODAL INPUT NAMA TAMU ── */
+  .hj-modal-overlay {
+    position: fixed; inset: 0; background: rgba(45, 54, 44, 0.92);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .hj-modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .hj-modal-box {
+    width: 88%; max-width: 380px; background: #fcfbf9;
+    border: 0.5px solid #a4b39e; border-radius: 16px; padding: 2rem;
+    text-align: center; box-shadow: 0 10px 35px rgba(0,0,0,0.4);
+  }
+  .hj-modal-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: #2d362c; margin-bottom: 0.5rem; font-weight: 600; }
+  .hj-modal-sub { font-size: 12px; color: #788775; margin-bottom: 1.5rem; line-height: 1.4; }
+
+  /* ── CONTAINER TAMPILAN QR CODE ── */
+  .hj-qr-wrapper {
+    background: #fff; border: 0.5px solid #e3ebe0; border-radius: 14px;
+    padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;
+  }
+  .hj-qr-container img { margin: 0 auto; display: block; max-width: 150px; border: 4px solid #2d362c; padding: 4px; border-radius: 6px; }
+  .hj-qr-text { font-size: 11px; color: #556b4e; font-weight: 600; letter-spacing: 1.5px; margin-top: 0.75rem; }
   </style>
 </head>
 <body>
 <div class="inv-root">
 
+  <!-- ══ OPENING RUSTIC ══ -->
   <div class="inv-opening" id="invOpening">
     <div class="inv-opening-content">
       <div class="inv-opening-eyebrow">✦ Undangan Pernikahan ✦</div>
@@ -240,6 +264,17 @@
     </div>
   </div>
 
+  <!-- ── MODAL INPUT NAMA TAMU MANDIRI ── -->
+  <div class="hj-modal-overlay" id="hjNameModal">
+    <div class="hj-modal-box">
+      <div class="hj-modal-title">Selamat Datang</div>
+      <div class="hj-modal-sub">Mohon masukkan nama lengkap Anda untuk membuka Undangan Digital dan mendapatkan Barcode Kehadiran Anda.</div>
+      <input class="inv-input" style="background:#fff; border: 0.5px solid #e3ebe0; color:#2d362c;" placeholder="Ketik nama lengkap Anda..." id="hjGuestNameInput" required>
+      <button class="inv-send-btn" style="margin-top:10px;" id="hjSubmitNameBtn" onclick="prosesDaftarMandiri()">Buka Undangan</button>
+    </div>
+  </div>
+
+  <!-- ══ MAIN ══ -->
   <div class="inv-main" id="invMain">
 
     <div class="inv-hero">
@@ -264,8 +299,7 @@
    <!-- Ayat -->
     <div class="inv-section" style="background:#fff;">
       <div class="inv-ayat">
-        <!-- 🟢 FIX: Kata BEYNAKUM sudah diganti menjadi بَيْنَكُمْ murni Arab -->
-        <div class="inv-ayat-arabic">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَرَحْمَةً</div>
+        <div class="inv-ayat-arabic">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم mِّنْ أَنفُسِكُمْ أَزْوَاجًا Lِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَرَحْمَةً</div>
         <div class="inv-ayat-trans">"Dan di antara tanda-tanda kekuasaan-Nya, Dia menciptakan untukmu pasangan hidup dari jenismu sendiri agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang."</div>
         <div class="inv-ayat-source">QS. Ar-Rum : 21</div>
       </div>
@@ -359,6 +393,14 @@
 
     <div class="inv-section alt">
       <div class="inv-slabel">Ucapan & Doa Tamu</div>
+
+      <!-- ── WADAH BARCODE QR CODE UNIK ── -->
+      <div class="hj-qr-wrapper" id="hjQrSection" style="display: none;">
+        <div class="hj-qr-container" id="hjQrImageContainer"></div>
+        <div class="hj-qr-text">BARCODE KEHADIRAN ANDA</div>
+        <p style="font-size:11px; color:#788775; margin-top:6px; padding: 0 10px;">Silakan screenshot barcode ini untuk di-scan oleh panitia di meja tamu saat hari-H acara.</p>
+      </div>
+
       <div class="inv-rsvp-area">
         <div class="inv-rsvp-sub">Sampaikan doa restu terbaik Anda untuk kedua mempelai</div>
         <form id="commentForm" onsubmit="kirimDoaTamu(event)">
@@ -398,6 +440,7 @@
       </div>
     </div>
 
+    <!-- ── FIXED FOOTER JINJA ── -->
     <div class="inv-footer">
       <div class="inv-footer-names">{{ event.name|string if event.name else '-' }}</div>
       <div class="inv-footer-sub">{{ event.date|string if event.date else '-' }} · {{ event.location|string if event.location else '-' }}</div>
@@ -425,13 +468,63 @@
 </div>
 
 <script>
-  let musicPlaying = false;
+  // 🟢 FIX REDECLARE: Amankan penentuan variabel musik ke global scope window object
+  if (typeof window.musicPlaying === 'undefined') {
+    window.musicPlaying = false;
+  }
+  
+  const QR_API_URL = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=";
 
   function openInvitation() {
-    document.getElementById('invOpening').style.display = 'none';
-    document.getElementById('invMain').classList.add('visible');
-    document.getElementById('musicBar').style.display = 'flex';
-    startCountdown();
+    document.getElementById('hjNameModal').classList.add('active');
+  }
+
+  function prosesDaftarMandiri() {
+    const nameInput = document.getElementById('hjGuestNameInput');
+    const btnSubmit = document.getElementById('hjSubmitNameBtn');
+    const guestName = nameInput.value.trim();
+
+    if (!guestName) {
+      alert('Silakan masukkan nama lengkap Anda terlebih dahulu.');
+      return;
+    }
+
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="ti ti-loader"></i> Memproses...';
+
+    fetch('/api/guests/{{ event._id|string }}/register-self', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: guestName })
+    })
+    .then(response => response.json())
+    .then(res => {
+      if (res.status === 'success' || res.data) {
+        const qrDataString = res.data.qr_code;
+
+        const qrImgContainer = document.getElementById('hjQrImageContainer');
+        qrImgContainer.innerHTML = `<img src="${QR_API_URL}${encodeURIComponent(qrDataString)}" alt="QR Code Tamu">`;
+        document.getElementById('hjQrSection').style.display = 'block';
+
+        document.getElementById('ucapanName').value = guestName;
+
+        document.getElementById('hjNameModal').classList.remove('active');
+        document.getElementById('invOpening').style.display = 'none';
+        document.getElementById('invMain').classList.add('visible');
+        document.getElementById('musicBar').style.display = 'flex';
+        startCountdown();
+      } else {
+        alert(res.message || 'Gagal memproses pendaftaran nama.');
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = 'Buka Undangan';
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Terjadi gangguan koneksi ke server Flask.');
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = 'Buka Undangan';
+    });
   }
 
   function kirimDoaTamu(event) {
@@ -466,7 +559,6 @@
           list.insertBefore(newItem, list.firstChild);
           if (list.children.length > 3) list.lastChild.remove();
 
-          nameInput.value = '';
           msgInput.value  = '';
           alert('Terima kasih! Ucapan doa Anda berhasil dikirim.');
         } else {
@@ -489,8 +581,9 @@
   }
 
   function toggleMusic() {
-    musicPlaying = !musicPlaying;
-    document.getElementById('musicIcon').className = musicPlaying ? 'ti ti-player-pause' : 'ti ti-player-play';
+    // 🟢 FIX REDECLARE: Baca langsung properti dari global window
+    window.musicPlaying = !window.musicPlaying;
+    document.getElementById('musicIcon').className = window.musicPlaying ? 'ti ti-player-pause' : 'ti ti-player-play';
   }
 
   function shareWA() {

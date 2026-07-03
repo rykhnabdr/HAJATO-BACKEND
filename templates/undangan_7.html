@@ -7,11 +7,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── ⚡ TEMA NEO-BRUTALISM: Raw, Bold, High Contrast & Heavy Borders ── */
   body {
     font-family: 'Space Grotesk', sans-serif;
     background: #000000;
@@ -24,18 +23,19 @@
   .inv-root {
     width: 100%;
     max-width: 480px;
-    background: #f3f4f6; 
+    background: #ffffff;
     min-height: 100vh;
-    color: #000000;
+    color: #334155;
     overflow-x: hidden;
     position: relative;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
     border-left: 4px solid #000000;
     border-right: 4px solid #000000;
   }
 
-  /* ── OPENING BRUTALISM ── */
+  /* ── OPENING SCREEN ── */
   .inv-opening {
-    background: #ffde4d; 
+    background: #fafafa;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -43,48 +43,36 @@
     justify-content: center;
     text-align: center;
     padding: 2rem;
-    position: relative;
   }
   
   .inv-opening-eyebrow {
-    font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
-    color: #000000; font-weight: 700; background: #ffffff;
-    padding: 6px 12px; border: 3px solid #000000;
-    box-shadow: 3px 3px 0px #000000; margin-bottom: 2.5rem;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: #64748b; font-weight: 700; margin-bottom: 1.5rem;
   }
-  .inv-opening-bismillah {
-    font-size: 14px; color: #000000; font-weight: 700;
-    letter-spacing: 1px; margin-bottom: 2rem;
-  }
-  
-  .inv-ornament-row { display: flex; align-items: center; width: 100%; max-width: 240px; gap: 8px; margin-bottom: 2rem; }
-  .inv-ornament-line { flex: 1; height: 3px; background: #000000; }
-  .inv-diamond { width: 12px; height: 12px; background: #ffffff; border: 3px solid #000000; flex-shrink: 0; }
   
   .inv-opening-names {
-    font-size: 38px; color: #000000; font-weight: 700; line-height: 1.1; 
-    background: #ffffff; border: 4px solid #000000; padding: 16px;
-    box-shadow: 6px 6px 0px #000000; margin-bottom: 1rem; width: 100%;
-    text-transform: uppercase;
+    font-size: 34px; color: #1e293b; font-weight: 700; line-height: 1.2;
+    margin-bottom: 1rem; background: #ffffff; border: 4px solid #000000; padding: 16px;
+    box-shadow: 6px 6px 0px #000000; text-transform: uppercase; width: 100%;
   }
-  .inv-opening-sub { font-size: 16px; font-weight: 700; color: #000000; text-transform: uppercase; margin-bottom: 1rem; }
-  .inv-opening-date { font-size: 14px; font-weight: 700; color: #000000; text-transform: uppercase; letter-spacing: 2px; }
+  .inv-opening-sub { font-size: 14px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem; }
+  .inv-opening-date { font-size: 13px; font-weight: 700; color: #475569; letter-spacing: 1px; text-transform: uppercase; }
   
   .inv-open-btn {
-    margin-top: 3rem;
-    display: inline-flex; align-items: center; gap: 10px;
+    margin-top: 2.5rem;
+    display: inline-flex; align-items: center; gap: 8px;
     background: #ffffff; border: 3px solid #000000; color: #000000;
-    padding: 14px 32px; cursor: pointer; font-weight: 700;
-    font-family: 'Space Grotesk', sans-serif; font-size: 14px; text-transform: uppercase;
-    box-shadow: 5px 5px 0px #000000; transition: transform 0.1s, box-shadow 0.1s;
+    padding: 12px 28px; cursor: pointer; font-weight: 700;
+    border-radius: 0px; font-size: 13px; box-shadow: 5px 5px 0px #000000;
+    text-transform: uppercase; transition: transform 0.1s, box-shadow 0.1s;
   }
   .inv-open-btn:active {
     transform: translate(3px, 3px);
     box-shadow: 2px 2px 0px #000000;
   }
 
-  /* ── MAIN ── */
-  .inv-main { display: none; padding-bottom: 60px; }
+  /* ── MAIN CONTENT ── */
+  .inv-main { display: none; padding-bottom: 80px; }
   .inv-main.visible { display: block; }
 
   .inv-hero {
@@ -93,174 +81,214 @@
   }
   .inv-hero-tag {
     font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-    color: #000000; font-weight: 700; margin-bottom: 1.5rem;
+    color: #000000; font-weight: 700; margin-bottom: 1rem;
     background: #ffde4d; display: inline-block; padding: 4px 10px;
+    border: 2px solid #000000;
   }
-  .inv-hero-name { font-size: 34px; color: #ffffff; font-weight: 700; line-height: 1.1; margin-bottom: 0.5rem; text-transform: uppercase; }
-  .inv-hero-desc { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #9ca3af; margin-bottom: 2rem; line-height: 1.6; }
-  
-  .inv-hero-sep { display: flex; align-items: center; justify-content: center; gap: 10px; }
-  .inv-hero-sep span { width: 50px; height: 3px; background: #ffde4d; }
+  .inv-hero-name { font-size: 32px; color: #ffffff; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; }
+  .inv-hero-desc { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #9ca3af; line-height: 1.6; max-width: 320px; margin: 0 auto; }
 
-  /* Section */
   .inv-section { padding: 3rem 1.5rem; border-bottom: 4px solid #000000; }
   .inv-section.alt { background: #a3e635; }
 
-  /* Label Kategori */
   .inv-slabel {
     font-size: 14px; text-transform: uppercase; background: #000000; color: #ffffff;
     font-weight: 700; padding: 6px 12px; display: inline-block; margin-bottom: 2rem;
     border: 3px solid #000000; box-shadow: 4px 4px 0px #ffde4d;
   }
 
-  /* Kotak Ayat */
-  .inv-ayat { background: #ffffff; border: 4px solid #000000; padding: 2rem 1.25rem; box-shadow: 6px 6px 0px #000000; }
-  .inv-ayat-arabic { font-size: 20px; color: #000000; font-weight: 700; line-height: 1.8; margin-bottom: 1.5rem; text-align: center; }
-  .inv-ayat-trans { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #000000; line-height: 1.65; margin-bottom: 1rem; text-align: left; }
-  .inv-ayat-source { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #000000; text-align: right; display: block; }
+  /* Kotak Ayat / Quote */
+  .inv-ayat { background: #ffffff; border: 4px solid #000000; padding: 2rem 1.25rem; box-shadow: 6px 6px 0px #000000; text-align: center; }
+  .inv-ayat-arabic { font-size: 20px; color: #000000; font-weight: 700; line-height: 1.8; margin-bottom: 1.5rem; }
+  .inv-ayat-trans { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #000000; line-height: 1.6; font-style: italic; text-align: left; }
 
-  /* Layout Frame Foto Mempelai */
+  /* Layout Frame Foto Mempelai / Anak */
   .couple-photos-row { display: flex; flex-direction: column; gap: 24px; }
-  .couple-and { text-align: center; font-size: 28px; font-weight: 700; color: #000000; text-transform: uppercase; background: #ffde4d; border: 3px solid #000000; padding: 4px; box-shadow: 4px 4px 0px #000000; margin: 10px auto; width: 60px; }
-  .couple-photo-box { background: #ffffff; border: 4px solid #000000; padding: 14px; box-shadow: 6px 6px 0px #000000; }
-  .couple-photo-box img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 3px solid #000000; margin-bottom: 12px; }
+  .couple-photo-box { background: #ffffff; border: 4px solid #000000; padding: 14px; box-shadow: 6px 6px 0px #000000; text-align: center; }
+  .couple-photo-box img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border: 3px solid #000000; margin-bottom: 12px; display: block; }
   .couple-name-bar span { font-size: 22px; font-weight: 700; color: #000000; display: block; text-transform: uppercase; }
   .couple-name-bar small { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #4b5563; font-weight: 700; margin-top: 4px; display: block; }
+  .couple-and { text-align: center; font-size: 24px; font-weight: 700; color: #000000; text-transform: uppercase; background: #ffde4d; border: 3px solid #000000; padding: 4px; box-shadow: 4px 4px 0px #000000; margin: 10px auto; width: 60px; }
 
   /* Event Detail Cards */
-  .inv-event-cards { display: flex; flex-direction: column; gap: 16px; }
-  .inv-event-card { background: #ffffff; border: 4px solid #000000; padding: 1.75rem 1.25rem; box-shadow: 6px 6px 0px #000000; }
+  .inv-event-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .inv-event-card { background: #ffffff; border: 4px solid #000000; padding: 1.1rem 0.9rem; text-align: center; box-shadow: 6px 6px 0px #000000; }
   .inv-event-card-icon {
-    width: 44px; height: 44px; border: 3px solid #000000; background: #ffde4d;
+    width: 34px; height: 34px; border: 3px solid #000000; background: #ffde4d;
     display: flex; align-items: center; justify-content: center;
-    margin-bottom: 1rem; color: #000000; font-size: 20px; box-shadow: 3px 3px 0px #000000;
+    margin: 0 auto 0.6rem; color: #000000; font-size: 15px; box-shadow: 2px 2px 0px #000000;
   }
-  .inv-event-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
-  .inv-event-card-val { font-size: 18px; color: #000000; font-weight: 700; text-transform: uppercase; }
-  .inv-event-card-sub { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #1f2937; margin-top: 8px; font-weight: 700; }
+  .inv-event-card-label { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #6b7280; font-weight: 700; margin-bottom: 3px; }
+  .inv-event-card-val { font-size: 15px; color: #000000; font-weight: 700; line-height: 1.2; text-transform: uppercase; }
+  .inv-event-card-sub { font-family: 'DM Sans', sans-serif; font-size: 11px; color: #1f2937; margin-top: 3px; font-weight: 700; }
 
-  /* Hitung Mundur Kotak Kuning */
+  /* Hitung Mundur */
   .inv-countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .inv-cd-box { background: #ffffff; border: 3px solid #000000; padding: 1.25rem 0.25rem; text-align: center; box-shadow: 4px 4px 0px #000000; }
-  .inv-cd-num { font-size: 26px; color: #000000; font-weight: 700; }
-  .inv-cd-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #000000; margin-top: 4px; }
+  .inv-cd-box { background: #ffffff; border: 3px solid #000000; padding: 1rem 0.25rem; text-align: center; box-shadow: 4px 4px 0px #000000; }
+  .inv-cd-num { font-size: 22px; color: #000000; font-weight: 700; }
+  .inv-cd-label { font-size: 10px; font-weight: 700; color: #000000; margin-top: 2px; text-transform: uppercase; }
 
   /* Rundown List */
-  .inv-agenda-list { display: flex; flex-direction: column; gap: 12px; }
-  .inv-agenda-row { display: flex; align-items: center; gap: 14px; background: #ffffff; border: 3px solid #000000; padding: 14px; box-shadow: 5px 5px 0px #000000; }
-  .inv-agenda-dot { width: 10px; height: 10px; background: #000000; flex-shrink: 0; }
-  .inv-agenda-time { font-size: 13px; font-weight: 700; color: #000000; min-width: 95px; }
-  .inv-agenda-act { font-size: 13px; font-weight: 700; color: #000000; text-transform: uppercase; }
+  .inv-agenda-list { display: flex; flex-direction: column; gap: 8px; }
+  .inv-agenda-row { display: flex; align-items: center; gap: 10px; background: #ffffff; border: 3px solid #000000; padding: 11px 13px; box-shadow: 4px 4px 0px #000000; border-left: 6px solid #000000; }
+  .inv-agenda-time { font-size: 11px; font-weight: 700; color: #000000; min-width: 85px; }
+  .inv-agenda-act { font-size: 12.5px; font-weight: 700; color: #000000; text-transform: uppercase; }
 
-  /* RSVP Ucapan & Doa */
-  .inv-rsvp-area { background: #ffde4d; border: 4px solid #000000; padding: 1.75rem; box-shadow: 6px 6px 0px #000000; }
-  .inv-rsvp-sub { font-size: 13px; font-weight: 700; color: #000000; margin-bottom: 1.5rem; text-transform: uppercase; }
+  /* RSVP & Ucapan */
+  .inv-rsvp-area { background: #ffde4d; border: 4px solid #000000; padding: 1.5rem; box-shadow: 6px 6px 0px #000000; }
   .inv-input {
-    display: block; width: 100%;
-    background: #ffffff; border: 3px solid #000000;
-    color: #000000; padding: 12px; font-weight: 700;
-    font-size: 13px; font-family: 'Space Grotesk', sans-serif; margin-bottom: 12px;
-    box-shadow: 3px 3px 0px #000000;
+    display: block; width: 100%; background: #ffffff; border: 3px solid #000000;
+    color: #000000; padding: 10px 13px; font-size: 12px; margin-bottom: 9px; font-weight: 700;
+    box-shadow: 3px 3px 0px #000000; font-family: 'Space Grotesk', sans-serif;
   }
   .inv-input::placeholder { color: #9ca3af; }
-  .inv-input:focus { outline: none; background: #f9fafb; }
-  
   .inv-send-btn {
-    display: block; width: 100%; padding: 14px;
-    background: #000000; border: none; color: #ffffff;
-    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700;
-    text-transform: uppercase; cursor: pointer; box-shadow: 4px 4px 0px #a3e635;
+    display: block; width: 100%; padding: 11px; background: #000000; border: none;
+    color: #ffffff; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+    box-shadow: 4px 4px 0px #a3e635; font-family: 'Space Grotesk', sans-serif;
   }
 
-  .inv-ucapan-list { display: flex; flex-direction: column; gap: 12px; margin-top: 2rem; }
-  .inv-ucapan-item { background: #ffffff; border: 3px solid #000000; padding: 14px; box-shadow: 4px 4px 0px #000000; }
-  .inv-ucapan-name { font-size: 14px; font-weight: 700; color: #000000; margin-bottom: 4px; text-transform: uppercase; }
-  .inv-ucapan-msg { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #1f2937; line-height: 1.5; }
+  .inv-ucapan-list { display: flex; flex-direction: column; gap: 9px; margin-top: 1rem; }
+  .inv-ucapan-item { background: #ffffff; border: 3px solid #000000; padding: 12px 14px; box-shadow: 4px 4px 0px #000000; }
+  .inv-ucapan-name { font-size: 11px; font-weight: 700; color: #000000; margin-bottom: 3px; text-transform: uppercase; }
+  .inv-ucapan-msg { font-family: 'DM Sans', sans-serif; font-size: 11px; color: #475569; line-height: 1.5; }
 
   /* Amplop Digital */
-  .inv-amplop { border: 4px solid #000000; padding: 2rem 1.25rem; background: #ffffff; text-align: center; box-shadow: 6px 6px 0px #000000; }
+  .inv-amplop { border: 4px solid #000000; padding: 1.5rem; background: #ffffff; text-align: center; box-shadow: 6px 6px 0px #000000; }
   .inv-amplop-icon {
-    width: 48px; height: 48px; border: 3px solid #000000; background: #a3e635;
+    width: 44px; height: 44px; border: 3px solid #000000; background: #a3e635;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 1rem; color: #000000; font-size: 22px; box-shadow: 3px 3px 0px #000000;
+    margin: 0 auto 0.6rem; color: #000000; font-size: 18px; box-shadow: 2px 2px 0px #000000;
   }
-  .inv-amplop-title { font-size: 20px; color: #000000; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
-  .inv-amplop-sub { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #4b5563; margin-bottom: 1.25rem; font-weight: 700; }
-  .inv-rekening-val { font-size: 18px; font-weight: 700; color: #000000; letter-spacing: 1px; margin-bottom: 1.5rem; background: #f3f4f6; border: 2px dashed #000000; padding: 10px; display: inline-block; }
+  .inv-amplop-title { font-size: 18px; color: #000000; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+  .inv-amplop-sub { font-family: 'DM Sans', sans-serif; font-size: 11px; color: #4b5563; margin-bottom: 0.5rem; font-weight: 700; }
+  .inv-rekening-val { font-size: 15px; font-weight: 700; color: #000000; letter-spacing: 1px; margin-bottom: 1rem; background: #f3f4f6; border: 2px dashed #000000; padding: 10px; display: inline-block; }
   .inv-amplop-btn {
-    display: inline-flex; align-items: center; gap: 8px;
     background: #ffde4d; color: #000000; border: 3px solid #000000;
-    padding: 12px 24px; font-size: 13px; font-weight: 700;
-    font-family: 'Space Grotesk', sans-serif; cursor: pointer; text-transform: uppercase;
-    box-shadow: 4px 4px 0px #000000;
+    padding: 9px 20px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase;
+    box-shadow: 4px 4px 0px #000000; font-family: 'Space Grotesk', sans-serif;
   }
 
   /* Footer */
-  .inv-footer { background: #000000; padding: 4rem 2rem; text-align: center; color: #ffffff; }
-  .inv-footer-names { font-size: 28px; color: #ffffff; font-weight: 700; margin-bottom: 0.5rem; text-transform: uppercase; }
-  .inv-footer-sub { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #9ca3af; margin-bottom: 2.5rem; }
-  .inv-footer-divider { height: 3px; background: #ffde4d; margin-bottom: 2rem; }
+  .inv-footer { background: #000000; padding: 3.5rem 2rem; text-align: center; color: #ffffff; }
+  .inv-footer-names { font-size: 26px; color: #ffffff; font-weight: 700; margin-bottom: 0.5rem; text-transform: uppercase; }
+  .inv-footer-sub { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #9ca3af; margin-bottom: 1.75rem; }
+  .inv-footer-divider { height: 3px; background: #ffde4d; margin-bottom: 1.25rem; }
   
   .inv-footer-share { display: flex; flex-direction: column; gap: 10px; }
   .inv-share-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    border: 3px solid #ffffff; padding: 12px; color: #000000; background: #ffffff;
-    font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif;
+    border: 3px solid #ffffff; padding: 10px 14px; color: #000000; background: #ffffff;
+    font-size: 11px; cursor: pointer; font-family: 'Space Grotesk', sans-serif;
     text-transform: uppercase; box-shadow: 4px 4px 0px #ffde4d;
   }
-  .inv-footer-credit { margin-top: 3rem; font-size: 10px; letter-spacing: 2px; color: #4b5563; text-transform: uppercase; font-weight: 700; }
+  .inv-footer-credit { margin-top: 1.5rem; font-size: 9px; letter-spacing: 2px; color: #4b5563; text-transform: uppercase; font-weight: 700; }
 
   /* Music Bar */
   .inv-music-bar {
     position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 480px;
-    background: #ffffff; border: 4px solid #000000;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 1.5rem; z-index: 100; box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+    width: 100%; max-width: 480px; background: #ffffff; border: 4px solid #000000;
+    display: flex; align-items: center; justify-content: space-between; padding: 12px 1.5rem; z-index: 100;
   }
-  .inv-music-title { font-size: 12px; color: #000000; font-weight: 700; text-transform: uppercase; }
+  .inv-music-title { font-size: 11px; color: #000000; font-weight: 700; text-transform: uppercase; }
   .inv-music-btn {
-    width: 36px; height: 36px; border: 3px solid #000000; background: #ffde4d;
-    color: #000000; font-size: 16px; cursor: pointer;
+    width: 32px; height: 32px; border: 3px solid #000000; background: #ffde4d;
+    color: #000000; font-size: 14px; cursor: pointer;
     display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 0px #000000;
   }
+
+  /* ── MODAL INPUT NAMA TAMU NEO-BRUTALISM ── */
+  .hj-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .hj-modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .hj-modal-box {
+    width: 88%; max-width: 380px; background: #ffffff;
+    border: 4px solid #000000; padding: 2rem;
+    text-align: center; box-shadow: 8px 8px 0px #ffde4d;
+  }
+  .hj-modal-title { font-size: 22px; color: #000000; margin-bottom: 0.5rem; font-weight: 700; text-transform: uppercase; }
+  .hj-modal-sub { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #475569; margin-bottom: 1.5rem; line-height: 1.5; font-weight: 700; }
+
+  /* ── CONTAINER TAMPILAN QR CODE NEO-BRUTALISM ── */
+  .hj-qr-wrapper {
+    background: #ffffff; border: 3px solid #000000;
+    padding: 1.5rem; text-align: center; margin-bottom: 1.25rem; box-shadow: 4px 4px 0px #000000;
+  }
+  .hj-qr-container img { margin: 0 auto; display: block; max-width: 150px; border: 4px solid #000000; padding: 4px; background: #ffffff; }
+  .hj-qr-text { font-size: 12px; color: #000000; font-weight: 700; letter-spacing: 1px; margin-top: 0.75rem; text-transform: uppercase; }
   </style>
 </head>
 <body>
 <div class="inv-root">
 
-  <!-- ══ OPENING ══ -->
   <div class="inv-opening" id="invOpening">
     <div class="inv-opening-content" style="width: 100%;">
-      <div class="inv-opening-eyebrow">✦ UNDANGAN DIGITAL ✦</div>
-      <div class="inv-opening-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</div>
+      <div class="inv-opening-eyebrow">
+        {% if event.category == 'wedding' %}
+          ✦ Undangan Pernikahan ✦
+        {% elif event.category == 'khitanan' %}
+          ✦ Undangan Khitanan ✦
+        {% else %}
+          ✦ Undangan Resmi / Webinar ✦
+        {% endif %}
+      </div>
+
+      {% if event.category != 'formal' %}
+        <div class="inv-opening-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</div>
+      {% endif %}
+
       <div class="inv-ornament-row" style="margin: 0 auto 2rem;">
         <div class="inv-ornament-line"></div>
         <div class="inv-diamond"></div>
         <div class="inv-ornament-line"></div>
       </div>
-      <div class="inv-opening-names">{{ event.name|string if event.name else 'OFFICIAL EVENT' }}</div>
-      <div class="inv-opening-sub">Keluarga Besar</div>
+      <div class="inv-opening-names">{{ event.name|string if event.name else '-' }}</div>
+      <div class="inv-opening-sub">
+        {% if event.category == 'wedding' or event.category == 'khitanan' %}
+          & Keluarga Besar
+        {% else %}
+          Pihak Penyelenggara Acara
+        {% endif %}
+      </div>
       <div class="inv-opening-date">{{ event.date|string if event.date else '-' }}</div>
+      <div class="inv-opening-date" style="margin-top:4px; font-size:11px; font-weight:700;">{{ event.location|string if event.location else '-' }}</div>
       <button class="inv-open-btn" onclick="openInvitation()">
         <i class="ti ti-envelope-open"></i> Buka Undangan
       </button>
     </div>
   </div>
 
-  <!-- ══ MAIN ══ -->
+  <div class="hj-modal-overlay" id="hjNameModal">
+    <div class="hj-modal-box">
+      <div class="hj-modal-title">Selamat Datang</div>
+      <div class="hj-modal-sub">Mohon masukkan nama lengkap Anda untuk membuka Undangan Digital dan mendapatkan Barcode Kehadiran Anda.</div>
+      <input class="inv-input" style="background:#ffffff; border: 3px solid #000000; color:#000000; box-shadow: none;" placeholder="Ketik nama lengkap Anda..." id="hjGuestNameInput" required>
+      <button class="inv-send-btn" style="margin-top:10px;" id="hjSubmitNameBtn" onclick="prosesDaftarMandiri()">Buka Undangan</button>
+    </div>
+  </div>
+
   <div class="inv-main" id="invMain">
 
-    <!-- HERO -->
     <div class="inv-hero">
       <div class="inv-hero-content">
-        <div class="inv-hero-tag">WALIMATUL 'URSY</div>
+        <div class="inv-hero-tag">
+          {% if event.category == 'wedding' %}
+            WALIMATUL 'URSY
+          {% elif event.category == 'khitanan' %}
+            WALIMATUL KHITAN
+          {% else %}
+            OFFICIAL AGENDA MEETING
+          {% endif %}
+        </div>
         <div class="inv-hero-name">{{ event.name|string if event.name else '-' }}</div>
         <div class="inv-hero-desc">
           {% if event.description and event.description.strip() != "" %}
             {{ event.description|string }}
           {% else %}
-            MENGUNDANG KEHADIRAN ANDA DALAM ACARA PERNIKAHAN KAMI.
+            Mengundang Kehadiran Anda dalam Agenda Spesial
           {% endif %}
         </div>
         <div class="inv-hero-sep">
@@ -271,46 +299,67 @@
       </div>
     </div>
 
-    <!-- Ayat -->
+    {% if event.category != 'formal' %}
     <div class="inv-section" style="background:#ffffff;">
       <div class="inv-ayat">
-        <div class="inv-ayat-arabic">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَرَحْمَةً</div>
-        <div class="inv-ayat-trans">"Dan di antara tanda-tanda kekuasaan-Nya, Dia menciptakan untukmu pasangan hidup dari jenismu sendiri agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang."</div>
-        <div class="inv-ayat-source">QS. AR-RUM : 21</div>
+        {% if event.category == 'wedding' %}
+          <div class="inv-ayat-arabic">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَرَحْمَةً</div>
+          <div class="inv-ayat-trans">"Dan di antara tanda-tanda kekuasaan-Nya, Dia menciptakan untukmu pasangan hidup dari jenismu sendiri agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang."</div>
+          <div class="inv-ayat-source">QS. AR-RUM : 21</div>
+        {% else %}
+          <div class="inv-ayat-trans">"Ungkapan rasa syukur tulus kami panjatkan atas berkah limpahan kesehatan, keselamatan, serta kelancaran tasyakuran khitan putra kami terkasih."</div>
+        {% endif %}
       </div>
     </div>
+    {% endif %}
 
-    <!-- Foto Mempelai -->
+    {% if event.category == 'wedding' or event.category == 'khitanan' %}
     <div class="inv-section" style="background:#ffffff;">
-      <div class="inv-slabel">KEDUA MEMPELAI</div>
+      <div class="inv-slabel">
+        {{ 'KEDUA MEMPELAI' if event.category == 'wedding' else 'PROFIL ANAK KHITAN' }}
+      </div>
       <div class="couple-photos-row">
-        <div class="couple-photo-box">
-          {% if event.gallery and event.gallery|length >= 1 %}
-            <img src="/uploads/gallery/{{ event.gallery[0] }}" onerror="this.src='https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400';" alt="Mempelai Pria">
-          {% else %}
-            <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400" alt="Mempelai Pria">
-          {% endif %}
-          <div class="couple-name-bar">
-            <span>MEMPELAI PRIA</span>
-            <small>Putra Terbaik Keluarga Besar</small>
+        {% if event.category == 'wedding' %}
+          <div class="couple-photo-box">
+            {% if event.gallery and event.gallery|length >= 1 %}
+              <img src="/uploads/gallery/{{ event.gallery[0] }}" onerror="this.src='https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400';" alt="Mempelai Pria">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400" alt="Mempelai Pria">
+            {% endif %}
+            <div class="couple-name-bar">
+              <span>MEMPELAI PRIA</span>
+              <small>Putra Terbaik Keluarga Besar</small>
+            </div>
           </div>
-        </div>
-        <div class="couple-and">AND</div>
-        <div class="couple-photo-box">
-          {% if event.gallery and event.gallery|length >= 2 %}
-            <img src="/uploads/gallery/{{ event.gallery[1] }}" onerror="this.src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400';" alt="Mempelai Wanita">
-          {% else %}
-            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400" alt="Mempelai Wanita">
-          {% endif %}
-          <div class="couple-name-bar">
-            <span>MEMPELAI WANITA</span>
-            <small>Putri Terbaik Keluarga Besar</small>
+          <div class="couple-and">AND</div>
+          <div class="couple-photo-box">
+            {% if event.gallery and event.gallery|length >= 2 %}
+              <img src="/uploads/gallery/{{ event.gallery[1] }}" onerror="this.src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400';" alt="Mempelai Wanita">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400" alt="Mempelai Wanita">
+            {% endif %}
+            <div class="couple-name-bar">
+              <span>MEMPELAI WANITA</span>
+              <small>Putri Terbaik Keluarga Besar</small>
+            </div>
           </div>
-        </div>
+        {% elif event.category == 'khitanan' %}
+          <div class="couple-photo-box" style="flex: 1;">
+            {% if event.gallery and event.gallery|length >= 1 %}
+              <img src="/uploads/gallery/{{ event.gallery[0] }}" onerror="this.src='https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=400';" alt="Foto Anak">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=400" alt="Foto Anak">
+            {% endif %}
+            <div class="couple-name-bar">
+              <span>PUTRA TERCINTA</span>
+              <small>Buah Hati Kebanggaan Keluarga</small>
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
+    {% endif %}
 
-    <!-- Detail Acara -->
     <div class="inv-section">
       <div class="inv-slabel">DETAIL AGENDA</div>
       <div class="inv-event-cards">
@@ -322,7 +371,7 @@
         </div>
         <div class="inv-event-card">
           <div class="inv-event-card-icon"><i class="ti ti-map-pin"></i></div>
-          <div class="inv-event-card-label">LOKASI UTAMA</div>
+          <div class="inv-event-card-label">LOKASI ACARA</div>
           <div class="inv-event-card-val">{{ event.location|string if event.location else '-' }}</div>
           <div class="inv-event-card-sub" style="margin-top: 12px;">
             <a href="http://maps.google.com/?q={{ (event.location|string)|urlencode }}" target="_blank"
@@ -332,7 +381,6 @@
       </div>
     </div>
 
-    <!-- Countdown -->
     <div class="inv-section alt">
       <div class="inv-slabel">HITUNG MUNDUR</div>
       <div class="inv-countdown">
@@ -343,7 +391,6 @@
       </div>
     </div>
 
-    <!-- Rundown Acara -->
     <div class="inv-section">
       <div class="inv-slabel">SUSUNAN ACARA</div>
       <div class="inv-agenda-list">
@@ -359,22 +406,27 @@
         <div class="inv-agenda-row">
           <div class="inv-agenda-dot"></div>
           <div class="inv-agenda-time">09.00 – 10.30</div>
-          <div class="inv-agenda-act">PROSESI AKAD NIKAH</div>
-        </div>
-        <div class="inv-agenda-row">
-          <div class="inv-agenda-dot"></div>
-          <div class="inv-agenda-time">10.30 – 13.00</div>
-          <div class="inv-agenda-act">RESEPSI & RAMAH TAMAH</div>
+          <div class="inv-agenda-act">PROSESI ACARA INTI UTAMA</div>
         </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- Ucapan & Doa -->
     <div class="inv-section alt">
-      <div class="inv-slabel">RSVP & UCAPAN TAMU</div>
+      <div class="inv-slabel">
+        {{ 'KONFIRMASI KEHADIRAN' if event.category == 'formal' else 'RSVP & UCAPAN TAMU' }}
+      </div>
+
+      <div class="hj-qr-wrapper" id="hjQrSection" style="display: none;">
+        <div class="hj-qr-container" id="hjQrImageContainer"></div>
+        <div class="hj-qr-text">BARCODE KEHADIRAN ANDA</div>
+        <p style="font-size:11px; font-weight: bold; color:#000000; margin-top:6px; padding: 0 10px;">Silakan screenshot barcode ini untuk di-scan oleh panitia di meja tamu saat hari-H acara.</p>
+      </div>
+
       <div class="inv-rsvp-area">
-        <div class="inv-rsvp-sub">KIRIM DOA RESTU TERBAIK ANDA UNTUK KEDUAMEMPELAI</div>
+        <div class="inv-rsvp-sub">
+          {{ 'Sampaikan konfirmasi kehadiran atau dukungan Anda untuk agenda ini' if event.category == 'formal' else 'KIRIM DOA RESTU TERBAIK ANDA UNTUK PEMILIK ACARA' }}
+        </div>
         <form id="commentForm" onsubmit="kirimDoaTamu(event)">
           <input class="inv-input" placeholder="NAMA ANDA" id="ucapanName" name="name" required>
           <textarea class="inv-input" rows="3" placeholder="TULISKAN DOA RESTU DI SINI..." id="ucapanMsg" name="message" style="resize:none;" required></textarea>
@@ -393,28 +445,28 @@
           {% endfor %}
         {% else %}
           <p id="noCommentText" style="font-size:12px; color:#000000; text-align:center; font-style:italic; font-weight:bold; margin-top:10px;">
-            BELUM ADA UCAPAN DOA DARI TAMU.
+            BELUM ADA UCAPAN DOA DARI TAMU UNDANGAN.
           </p>
         {% endif %}
       </div>
     </div>
 
-    <!-- Amplop Digital -->
+    {% if event.category != 'formal' %}
     <div class="inv-section">
-      <div class="inv-slabel">KADO PERNIKAHAN</div>
+      <div class="inv-slabel">KADO DIGITAL</div>
       <div class="inv-amplop">
         <div class="inv-amplop-icon"><i class="ti ti-gift"></i></div>
         <div class="inv-amplop-title">AMPLOP DIGITAL</div>
         <div class="inv-amplop-sub">INFO REKENING UNTUK TANDA KASIH HADIAH DIGITAL:</div>
         <div class="inv-rekening-val">{{ event.rekening|string if event.rekening else '-' }}</div>
-        <br>
+        <br><br>
         <button class="inv-amplop-btn" onclick="salinRekening()">
           <i class="ti ti-copy"></i> SALIN INFO REKENING
         </button>
       </div>
     </div>
+    {% endif %}
 
-    <!-- Footer -->
     <div class="inv-footer">
       <div class="inv-footer-names">{{ event.name|string if event.name else '-' }}</div>
       <div class="inv-footer-sub">{{ event.date|string if event.date else '-' }} · {{ event.location|string if event.location else '-' }}</div>
@@ -430,12 +482,14 @@
       <div class="inv-footer-credit">MADE WITH HAJATO PROJECT</div>
     </div>
 
-  </div><!-- /inv-main -->
-
-  <!-- Music Bar -->
-  <div class="inv-music-bar" id="musicBar" style="display:none;">
+  </div><div class="inv-music-bar" id="musicBar" style="display:none;">
     <div class="inv-music-title">
-      <i class="ti ti-music"></i> TRACK: SHOLAWAT BADAR INSTRUMENT
+      <i class="ti ti-music"></i> 
+      {% if event.category == 'formal' %}
+        TRACK: INSTRUMENTAL CORPORATE BACKGROUND
+      {% else %}
+        TRACK: SHOLAWAT BADAR INSTRUMENT
+      {% endif %}
     </div>
     <button class="inv-music-btn" id="musicBtn" onclick="toggleMusic()">
       <i class="ti ti-player-play" id="musicIcon"></i>
@@ -445,13 +499,63 @@
 </div>
 
 <script>
-  let musicPlaying = false;
+  // 🟢 FIX REDECLARE: Amankan penentuan variabel musik ke scope global window object browser
+  if (typeof window.musicPlaying === 'undefined') {
+    window.musicPlaying = false;
+  }
+
+  const QR_API_URL = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=";
 
   function openInvitation() {
-    document.getElementById('invOpening').style.display = 'none';
-    document.getElementById('invMain').classList.add('visible');
-    document.getElementById('musicBar').style.display = 'flex';
-    startCountdown();
+    document.getElementById('hjNameModal').classList.add('active');
+  }
+
+  function prosesDaftarMandiri() {
+    const nameInput = document.getElementById('hjGuestNameInput');
+    const btnSubmit = document.getElementById('hjSubmitNameBtn');
+    const guestName = nameInput.value.trim();
+
+    if (!guestName) {
+      alert('SILAKAN MASUKKAN NAMA LENGKAP ANDA TERLEBIH DAHULU.');
+      return;
+    }
+
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="ti ti-loader"></i> MEMPROSES...';
+
+    fetch('/api/guests/{{ event._id|string }}/register-self', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: guestName })
+    })
+    .then(response => response.json())
+    .then(res => {
+      if (res.status === 'success' || res.data) {
+        const qrDataString = res.data.qr_code;
+
+        const qrImgContainer = document.getElementById('hjQrImageContainer');
+        qrImgContainer.innerHTML = `<img src="${QR_API_URL}${encodeURIComponent(qrDataString)}" alt="QR Code Tamu">`;
+        document.getElementById('hjQrSection').style.display = 'block';
+
+        document.getElementById('ucapanName').value = guestName;
+
+        document.getElementById('hjNameModal').classList.remove('active');
+        document.getElementById('invOpening').style.display = 'none';
+        document.getElementById('invMain').classList.add('visible');
+        document.getElementById('musicBar').style.display = 'flex';
+        startCountdown();
+      } else {
+        alert(res.message || 'GAGAL MEMPROSES PENDAFTARAN NAMA.');
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = 'BUKA UNDANGAN';
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('TERJADI GANGGUAN KONEKSI KE SERVER FLASK.');
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = 'BUKA UNDANGAN';
+    });
   }
 
   function kirimDoaTamu(event) {
@@ -461,7 +565,7 @@
     const btnKirim  = document.getElementById('btnKirimDoa');
     const name      = nameInput.value.trim();
     const message   = msgInput.value.trim();
-    if (!name || !message) { alert('Mohon isi nama dan ucapan Anda.'); return; }
+    if (!name || !message) { alert('MOHON ISI NAMA DAN UCAPAN ANDA.'); return; }
 
     btnKirim.disabled = true;
     btnKirim.innerHTML = 'MENGIRIM...';
@@ -486,7 +590,6 @@
           list.insertBefore(newItem, list.firstChild);
           if (list.children.length > 3) list.lastChild.remove();
 
-          nameInput.value = '';
           msgInput.value  = '';
           alert('SUKSES! UCAPAN DOA TAMU BERHASIL DIKIRIM.');
         } else {
@@ -496,21 +599,27 @@
       .catch(() => alert('TERJADI KESALAHAN KONEKSI KE SERVER.'))
       .finally(() => {
         btnKirim.disabled = false;
-        btnKirim.innerHTML = 'KIRIM UCAPAN';
+        const category = "{{ event.category }}";
+        if (category === 'formal') {
+          btnKirim.innerHTML = 'KIRIM UCAPAN';
+        } else {
+          btnKirim.innerHTML = 'KIRIM UCAPAN';
+        }
       });
   }
 
   function salinRekening() {
     const teks = "{{ event.rekening|string if event.rekening else '' }}";
-    if (!teks || teks === '-') { alert('Info rekening belum diatur.'); return; }
+    if (!teks || teks === '-') { alert('INFO REKENING BELUM DIATUR.'); return; }
     navigator.clipboard.writeText(teks)
       .then(() => alert('INFO REKENING BERHASIL DISALIN!'))
       .catch(() => alert('GAGAL MENYALIN INFO REKENING.'));
   }
 
   function toggleMusic() {
-    musicPlaying = !musicPlaying;
-    document.getElementById('musicIcon').className = musicPlaying ? 'ti ti-player-pause' : 'ti ti-player-play';
+    // 🟢 FIX REDECLARE: Baca langsung properti dari global window object browser
+    window.musicPlaying = !window.musicPlaying;
+    document.getElementById('musicIcon').className = window.musicPlaying ? 'ti ti-player-pause' : 'ti ti-player-play';
   }
 
   function shareWA() {
@@ -535,10 +644,7 @@
     function tick() {
       const diff = target - new Date();
       if (diff <= 0) {
-        document.getElementById('cdDays').textContent = '00';
-        document.getElementById('cdHours').textContent = '00';
-        document.getElementById('cdMins').textContent = '00';
-        document.getElementById('cdSecs').textContent = '00';
+        ['cdDays','cdHours','cdMins','cdSecs'].forEach(id => document.getElementById(id).textContent = '00');
         return;
       }
       
@@ -547,10 +653,10 @@
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
       
-      document.getElementById('cdDays').textContent  = (d < 10 ? '0' : '') + d;
-      document.getElementById('cdHours').textContent = (h < 10 ? '0' : '') + h;
-      document.getElementById('cdMins').textContent  = (m < 10 ? '0' : '') + m;
-      document.getElementById('cdSecs').textContent  = (s < 10 ? '0' : '') + s;
+      document.getElementById('cdDays').textContent  = String(d).padStart(2, '0');
+      document.getElementById('cdHours').textContent = String(h).padStart(2, '0');
+      document.getElementById('cdMins').textContent  = String(m).padStart(2, '0');
+      document.getElementById('cdSecs').textContent  = String(s).padStart(2, '0');
     }
     tick();
     setInterval(tick, 1000);

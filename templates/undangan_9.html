@@ -9,213 +9,347 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
   <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── 🍇 TEMA ORCHID PURPLE: Sentuhan Ungu Anggun & Magis ── */
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: #f3e8ff; 
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-  }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f3e8ff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
 
-  .inv-root {
-    width: 100%;
-    max-width: 480px;
-    background: #faf8ff; 
-    color: #2e1065; 
-    overflow-x: hidden;
-    position: relative;
-  }
+    .inv-root {
+      width: 100%;
+      max-width: 480px;
+      background: #faf8ff;
+      min-height: 100vh;
+      color: #2e1065;
+      overflow-x: hidden;
+      position: relative;
+    }
 
-  /* ── OPENING PURPLE ── */
-  .inv-opening {
-    background: #6d28d9; 
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 3rem 2rem;
-    position: relative;
-  }
-  
-  .inv-opening-eyebrow {
-    font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
-    color: #e9d5ff; font-weight: 500; margin-bottom: 2rem;
-  }
-  .inv-opening-bismillah {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 24px; color: #faf8ff; font-weight: 300;
-    letter-spacing: 1px; margin-bottom: 1.5rem; font-style: italic;
-  }
-  
-  .inv-ornament-row { display: flex; align-items: center; width: 100%; max-width: 200px; gap: 10px; margin-bottom: 1.5rem; }
-  .inv-ornament-line { flex: 1; height: 0.5px; background: #c084fc; opacity: 0.4; }
-  .inv-diamond { width: 8px; height: 8px; background: #e9d5ff; transform: rotate(45deg); flex-shrink: 0; }
-  
-  .inv-opening-names {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 42px; color: #faf8ff; font-weight: 300; line-height: 1.1; margin-bottom: 0.5rem;
-  }
-  .inv-opening-sub { font-size: 14px; color: #d8b4fe; margin-bottom: 1rem; }
-  .inv-opening-date { font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #e9d5ff; margin-top: 1rem; font-weight: 300; }
-  
-  .inv-open-btn {
-    margin-top: 2.5rem;
-    display: inline-flex; align-items: center; gap: 8px;
-    background: transparent; border: 0.5px solid #e9d5ff; color: #e9d5ff;
-    border-radius: 99px; padding: 10px 28px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; font-size: 12px; letter-spacing: 3px;
-    text-transform: uppercase; transition: all 0.3s;
-  }
-  .inv-open-btn:hover { background: #e9d5ff; color: #6d28d9; }
+    /* ══ OPENING PURPLE ══ */
+    .inv-opening {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      background: #6d28d9;
+    }
 
-  /* ── MAIN ── */
-  .inv-main { display: none; padding-bottom: 60px; }
-  .inv-main.visible { display: block; }
+    .inv-opening-content {
+      position: relative;
+      z-index: 2;
+      padding: 3rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-  .inv-hero {
-    background: #6d28d9; padding: 4rem 2rem; text-align: center;
-  }
-  .inv-hero-tag {
-    font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
-    color: #e9d5ff; font-weight: 500; margin-bottom: 1.5rem;
-  }
-  .inv-hero-name { font-family: 'Cormorant Garamond', serif; font-size: 38px; color: #faf8ff; font-weight: 300; line-height: 1.15; margin-bottom: 0.35rem; }
-  .inv-hero-desc { font-size: 12px; color: #d8b4fe; font-weight: 300; margin-bottom: 2rem; line-height: 1.5; }
-  
-  .inv-hero-sep { display: flex; align-items: center; justify-content: center; gap: 10px; }
-  .inv-hero-sep span { width: 40px; height: 0.5px; background: #5b21b6; }
+    .inv-eyebrow {
+      font-size: 9px; letter-spacing: 5px; text-transform: uppercase;
+      color: #e9d5ff; font-weight: 500; margin-bottom: 1.5rem;
+    }
 
-  /* Section */
-  .inv-section { padding: 3rem 1.75rem; border-bottom: 0.5px solid #f3e8ff; }
-  .inv-section:last-child { border-bottom: none; }
-  .inv-section.alt { background: #fdf4ff; }
+    .inv-bismillah {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 27px; color: #faf8ff; font-weight: 300;
+      letter-spacing: 1px; margin-bottom: 1.25rem; font-style: italic;
+    }
 
-  /* Label Kategori */
-  .inv-slabel {
-    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
-    color: #6d28d9; font-weight: 600; margin-bottom: 1.5rem;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .inv-slabel::after { content: ''; flex: 1; height: 0.5px; background: #e9d5ff; }
+    .inv-ornament-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1.5rem; width: 200px;
+    }
+    .inv-ornament-line { flex: 1; height: 0.5px; background: #c084fc; opacity: 0.5; }
+    .inv-diamond { width: 7px; height: 7px; background: #e9d5ff; transform: rotate(45deg); flex-shrink: 0; }
 
-  /* Kotak Ayat */
-  .inv-ayat { background: #6d28d9; padding: 2rem 1.5rem; border-radius: 12px; text-align: center; }
-  .inv-ayat-arabic { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: #e9d5ff; font-weight: 300; line-height: 1.7; margin-bottom: 1rem; }
-  .inv-ayat-trans { font-size: 13px; color: #f5f3ff; font-style: italic; line-height: 1.65; margin-bottom: 1rem; }
-  .inv-ayat-source { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #e9d5ff; font-weight: 500; }
+    .inv-opening-names {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 42px; color: #faf8ff; font-weight: 300; line-height: 1.1; margin-bottom: 0.5rem;
+    }
+    .inv-opening-sub {
+      font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+      color: #d8b4fe; font-weight: 300;
+    }
+    .inv-opening-date {
+      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+      color: #e9d5ff; margin-top: 1.25rem; font-weight: 300;
+    }
 
-  /* Layout Frame Foto Mempelai */
-  .couple-photos-row { display: flex; flex-direction: column; gap: 20px; }
-  .couple-and { text-align: center; font-family: 'Great Vibes', cursive; font-size: 32px; color: #6d28d9; margin: 5px 0; }
-  .couple-photo-box { background: #fff; border: 0.5px solid #f3e8ff; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(109,40,217,0.03); }
-  .couple-photo-box img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
-  .couple-name-bar span { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: #2e1065; display: block; }
-  .couple-name-bar small { font-size: 12px; color: #7c3aed; }
+    .inv-open-btn {
+      margin-top: 2.5rem;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent; border: 0.5px solid #e9d5ff; color: #e9d5ff;
+      border-radius: 99px; padding: 11px 28px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 3px;
+      text-transform: uppercase; transition: all 0.3s;
+    }
+    .inv-open-btn:hover { background: #e9d5ff; color: #6d28d9; }
 
-  /* Event Detail Cards */
-  .inv-event-cards { display: flex; flex-direction: column; gap: 14px; }
-  .inv-event-card { background: #fff; border: 0.5px solid #f3e8ff; border-radius: 12px; padding: 1.5rem 1.25rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(109,40,217,0.03); }
-  .inv-event-card-icon {
-    width: 42px; height: 42px; border-radius: 50%;
-    background: #f5f3ff; border: 0.5px solid #ddd6fe;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 0.75rem; color: #6d28d9; font-size: 18px;
-  }
-  .inv-event-card-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #6d28d9; font-weight: 500; margin-bottom: 6px; }
-  .inv-event-card-val { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: #2e1065; font-weight: 600; }
-  .inv-event-card-sub { font-size: 12px; color: #7c3aed; margin-top: 6px; }
+    /* ══ MAIN ══ */
+    .inv-main { display: none; padding-bottom: 60px; }
+    .inv-main.visible { display: block; }
 
-  /* Hitung Mundur Kotak Ungu Orchid */
-  .inv-countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .inv-cd-box { background: #6d28d9; border-radius: 10px; padding: 1rem 0.5rem; text-align: center; }
-  .inv-cd-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: #e9d5ff; font-weight: 300; }
-  .inv-cd-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #d8b4fe; margin-top: 4px; }
+    /* ── HERO ── */
+    .inv-hero {
+      position: relative; overflow: hidden;
+      background: #6d28d9; padding: 4rem 2rem; text-align: center;
+    }
+    .inv-hero-content {
+      position: relative; z-index: 2;
+    }
+    .inv-hero-tag {
+      font-size: 9px; letter-spacing: 5px; text-transform: uppercase;
+      color: #e9d5ff; margin-bottom: 1.25rem;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .inv-hero-tag::before, .inv-hero-tag::after {
+      content: ''; flex: 1; max-width: 38px; height: 0.5px; background: #e9d5ff; opacity: 0.4;
+    }
+    .inv-hero-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 38px; color: #faf8ff; font-weight: 300; line-height: 1.15; margin-bottom: 0.35rem;
+    }
+    .inv-hero-desc {
+      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      color: #d8b4fe; margin-bottom: 1.75rem; font-weight: 300;
+    }
+    .inv-hero-sep { display: flex; align-items: center; gap: 10px; justify-content: center; }
+    .inv-hero-sep span { width: 40px; height: 0.5px; background: #5b21b6; }
 
-  /* Rundown List */
-  .inv-agenda-list { display: flex; flex-direction: column; gap: 10px; }
-  .inv-agenda-row { display: flex; align-items: center; gap: 12px; background: #fff; border: 0.5px solid #f3e8ff; border-radius: 10px; padding: 14px; }
-  .inv-agenda-dot { width: 6px; height: 6px; border-radius: 50%; background: #e9d5ff; flex-shrink: 0; }
-  .inv-agenda-time { font-size: 12px; font-weight: 500; color: #6d28d9; min-width: 90px; }
-  .inv-agenda-act { font-size: 13px; color: #2e1065; }
+    /* ── SECTIONS ── */
+    .inv-section { padding: 3rem 1.75rem; border-bottom: 0.5px solid #f3e8ff; }
+    .inv-section:last-child { border-bottom: none; }
+    .inv-section.alt { background: #fdf4ff; }
 
-  /* RSVP Ucapan & Doa */
-  .inv-rsvp-area { background: #6d28d9; border-radius: 16px; padding: 1.75rem; }
-  .inv-rsvp-sub { font-size: 12px; color: #e9d5ff; margin-bottom: 1.5rem; text-align: center; }
-  .inv-input {
-    display: block; width: 100%;
-    background: #5b21b6; border: 0.5px solid #7c3aed;
-    border-radius: 8px; color: #faf8ff; padding: 12px;
-    font-size: 13px; font-family: 'DM Sans', sans-serif; margin-bottom: 12px;
-  }
-  .inv-input::placeholder { color: #c084fc; }
-  .inv-input:focus { outline: none; border-color: #e9d5ff; }
-  
-  .inv-send-btn {
-    display: block; width: 100%; padding: 12px;
-    background: #e9d5ff; border: none; border-radius: 8px; color: #6d28d9;
-    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
-    letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
-  }
+    .inv-slabel {
+      font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+      color: #6d28d9; font-weight: 500; margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .inv-slabel::after { content: ''; flex: 1; height: 0.5px; background: #e9d5ff; }
 
-  .inv-ucapan-list { display: flex; flex-direction: column; gap: 10px; margin-top: 1.5rem; }
-  .inv-ucapan-item { background: #fff; border: 0.5px solid #f3e8ff; border-radius: 10px; padding: 12px 14px; border-left: 3px solid #e9d5ff; }
-  .inv-ucapan-name { font-size: 13px; font-weight: 600; color: #2e1065; margin-bottom: 4px; }
-  .inv-ucapan-msg { font-size: 12px; color: #6d28d9; line-height: 1.5; font-style: italic; }
+    /* ── AYAT ── */
+    .inv-ayat {
+      background: #6d28d9; padding: 2rem 1.5rem; border-radius: 12px;
+      text-align: center;
+    }
+    .inv-ayat-arabic {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px; color: #e9d5ff; font-weight: 300;
+      line-height: 1.7; margin-bottom: 1rem;
+    }
+    .inv-ayat-trans {
+      font-size: 13px; color: #f5f3ff; font-style: italic;
+      line-height: 1.65; margin-bottom: 1rem;
+    }
+    .inv-ayat-source {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      color: #e9d5ff; font-weight: 500;
+    }
 
-  /* Hadiah / Amplop */
-  .inv-amplop { border: 0.5px solid #ddd6fe; border-radius: 12px; padding: 1.75rem 1.25rem; background: #fff; text-align: center; }
-  .inv-amplop-icon {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: #f5f3ff; border: 0.5px solid #ddd6fe;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 0.75rem; color: #6d28d9; font-size: 22px;
-  }
-  .inv-amplop-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: #2e1065; font-weight: 600; margin-bottom: 4px; }
-  .inv-amplop-sub { font-size: 12px; color: #7c3aed; margin-bottom: 1rem; }
-  .inv-rekening-val { font-size: 16px; font-weight: 700; color: #2e1065; letter-spacing: 0.5px; margin-bottom: 1.25rem; }
-  .inv-amplop-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #6d28d9; color: #e9d5ff; border: none; border-radius: 8px;
-    padding: 10px 24px; font-size: 12px; letter-spacing: 1px;
-    font-family: 'DM Sans', sans-serif; cursor: pointer; text-decoration: none;
-  }
+    /* ── COUPLE ── */
+    .couple-photos-row { display: flex; gap: 10px; align-items: center; }
+    .couple-photo-box {
+      flex: 1; background: #fff;
+      border: 0.5px solid #f3e8ff; border-radius: 12px; overflow: hidden; text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(109,40,217,0.03);
+    }
+    .couple-photo-box img {
+      width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; margin-bottom: 10px;
+    }
+    .couple-name-bar { padding: 10px 8px; background: #fff; }
+    .couple-name-bar span {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px; font-weight: 600; color: #2e1065; display: block;
+    }
+    .couple-name-bar small {
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: #7c3aed; font-weight: 500;
+    }
+    .couple-and {
+      font-family: 'Great Vibes', cursive;
+      font-size: 32px; color: #6d28d9; flex-shrink: 0; width: 32px;
+      text-align: center; line-height: 1;
+    }
 
-  /* Footer */
-  .inv-footer { background: #6d28d9; padding: 3.5rem 2rem; text-align: center; color: #faf8ff; }
-  .inv-footer-names { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: #faf8ff; font-weight: 300; margin-bottom: 0.5rem; }
-  .inv-footer-sub { font-size: 12px; color: #ddd6fe; margin-bottom: 2rem; }
-  .inv-footer-divider { height: 0.5px; background: #5b21b6; margin-bottom: 1.5rem; }
-  
-  .inv-footer-share { display: flex; justify-content: center; gap: 10px; }
-  .inv-share-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    border: 0.5px solid #5b21b6; border-radius: 8px;
-    padding: 10px 18px; color: #e9d5ff; background: transparent;
-    font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif;
-  }
-  .inv-footer-credit { margin-top: 2rem; font-size: 10px; letter-spacing: 2px; color: #5b21b6; text-transform: uppercase; }
+    /* ── EVENT CARDS ── */
+    .inv-event-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .inv-event-card {
+      background: #fff; border: 0.5px solid #f3e8ff; border-radius: 12px;
+      padding: 1.1rem 0.9rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(109,40,217,0.03);
+    }
+    .inv-event-card-icon {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: #f5f3ff; border: 0.5px solid #ddd6fe;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 0.6rem; color: #6d28d9; font-size: 15px;
+    }
+    .inv-event-card-label {
+      font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+      color: #6d28d9; font-weight: 500; margin-bottom: 3px;
+    }
+    .inv-event-card-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px; color: #2e1065; font-weight: 600; line-height: 1.2;
+    }
+    .inv-event-card-sub { font-size: 10px; color: #7c3aed; margin-top: 3px; font-weight: 300; }
 
-  /* Music Bar */
-  .inv-music-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 480px;
-    background: #6d28d9; border-top: 0.5px solid #5b21b6;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 1.5rem; z-index: 100;
-  }
-  .inv-music-title { font-size: 12px; color: #e9d5ff; }
-  .inv-music-btn {
-    width: 32px; height: 32px; border-radius: 50%;
-    border: 0.5px solid #e9d5ff; background: transparent;
-    color: #e9d5ff; font-size: 14px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-  }
+    /* ── COUNTDOWN ── */
+    .inv-countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .inv-cd-box {
+      background: #6d28d9; border-radius: 10px; padding: 1rem 0.5rem;
+      text-align: center;
+    }
+    .inv-cd-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px; color: #e9d5ff; font-weight: 300; line-height: 1;
+    }
+    .inv-cd-label {
+      font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+      color: #d8b4fe; margin-top: 4px; font-weight: 500;
+    }
+
+    /* ── AGENDA ── */
+    .inv-agenda-list { display: flex; flex-direction: column; gap: 8px; }
+    .inv-agenda-row {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 0.5px solid #f3e8ff;
+      border-radius: 10px; padding: 11px 13px;
+      border-left: 3px solid #e9d5ff;
+    }
+    .inv-agenda-dot { width: 5px; height: 5px; border-radius: 50%; background: #e9d5ff; flex-shrink: 0; }
+    .inv-agenda-time { font-size: 10px; font-weight: 500; color: #6d28d9; min-width: 88px; }
+    .inv-agenda-act { font-size: 12.5px; color: #2e1065; }
+
+    /* ── RSVP ── */
+    .inv-rsvp-area { background: #6d28d9; border-radius: 16px; padding: 1.5rem; }
+    .inv-rsvp-sub { font-size: 11px; color: #e9d5ff; margin-bottom: 1.25rem; text-align: center; }
+    .inv-input {
+      display: block; width: 100%;
+      background: #5b21b6; border: 0.5px solid #7c3aed;
+      border-radius: 8px; color: #faf8ff; padding: 10px 13px;
+      font-size: 12px; font-family: 'DM Sans', sans-serif; margin-bottom: 9px;
+    }
+    .inv-input::placeholder { color: #c084fc; }
+    .inv-input:focus { outline: none; border-color: #e9d5ff; }
+    .inv-send-btn {
+      display: block; width: 100%; padding: 11px;
+      background: #e9d5ff; border: none; border-radius: 8px; color: #6d28d9;
+      font-family: 'DM Sans', sans-serif; font-size: 11px;
+      font-weight: 600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+    }
+
+    /* ── UCAPAN ── */
+    .inv-ucapan-list { display: flex; flex-direction: column; gap: 9px; margin-top: 1rem; }
+    .inv-ucapan-item {
+      background: #fff; border: 0.5px solid #f3e8ff;
+      border-radius: 10px; padding: 12px 14px; border-left: 3px solid #e9d5ff;
+    }
+    .inv-ucapan-name { font-size: 11px; font-weight: 500; color: #2e1065; margin-bottom: 3px; }
+    .inv-ucapan-msg {
+      font-size: 11px; color: #6d28d9; line-height: 1.5;
+      font-style: italic; font-weight: 300;
+    }
+
+    /* ── AMPLOP ── */
+    .inv-amplop {
+      border: 0.5px solid #ddd6fe; border-radius: 12px; padding: 1.5rem;
+      background: #fff; text-align: center;
+    }
+    .inv-amplop-icon {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: #f5f3ff; border: 0.5px solid #ddd6fe;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 0.7rem; color: #6d28d9; font-size: 20px;
+    }
+    .inv-amplop-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px; color: #2e1065; font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .inv-amplop-sub { font-size: 11px; color: #7c3aed; margin-bottom: 0.5rem; }
+    .inv-rekening-val {
+      font-size: 14px; font-weight: 700; color: #2e1065;
+      letter-spacing: 0.5px; margin-bottom: 1rem;
+    }
+    .inv-amplop-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #6d28d9; color: #e9d5ff; border: none; border-radius: 8px;
+      padding: 9px 20px; font-size: 11px; letter-spacing: 1px;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; text-decoration: none;
+    }
+
+    /* ── FOOTER ── */
+    .inv-footer {
+      background: #6d28d9; padding: 2.5rem 1.75rem;
+      text-align: center; color: #faf8ff;
+    }
+    .inv-footer-names {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px; color: #faf8ff; margin-bottom: 0.4rem;
+    }
+    .inv-footer-sub {
+      font-size: 12px; color: #ddd6fe; margin-bottom: 1.75rem;
+    }
+    .inv-footer-divider { height: 0.5px; background: #5b21b6; margin-bottom: 1.25rem; }
+    .inv-footer-share { display: flex; justify-content: center; gap: 9px; }
+    .inv-share-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 0.5px solid #5b21b6; border-radius: 8px;
+      padding: 8px 14px; color: #e9d5ff; background: transparent;
+      font-size: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    }
+    .inv-footer-credit {
+      margin-top: 1.5rem; font-size: 9px; letter-spacing: 2px;
+      color: #5b21b6; text-transform: uppercase;
+    }
+
+    /* ── MUSIC BAR ── */
+    .inv-music-bar {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      background: #6d28d9; border-top: 0.5px solid #5b21b6;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 1.5rem; z-index: 100;
+    }
+    .inv-music-title { font-size: 12px; color: #e9d5ff; }
+    .inv-music-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid #e9d5ff; background: transparent;
+      color: #e9d5ff; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── MODAL INPUT NAMA TAMU ORCHID PURPLE ── */
+    .hj-modal-overlay {
+      position: fixed; inset: 0; background: rgba(46, 16, 101, 0.94);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .hj-modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .hj-modal-box {
+      width: 88%; max-width: 380px; background: #faf8ff;
+      border: 0.5px solid #e9d5ff; border-radius: 16px; padding: 2rem;
+      text-align: center; box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+    }
+    .hj-modal-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: #6d28d9; margin-bottom: 0.5rem; font-weight: 600; }
+    .hj-modal-sub { font-size: 12px; color: #7c3aed; margin-bottom: 1.5rem; line-height: 1.4; }
+
+    /* ── CONTAINER TAMPILAN QR CODE ORCHID PURPLE ── */
+    .hj-qr-wrapper {
+      background: #fff; border: 0.5px solid #f3e8ff; border-radius: 14px;
+      padding: 1.5rem; text-align: center; margin-bottom: 1.25rem;
+    }
+    .hj-qr-container img { margin: 0 auto; display: block; max-width: 150px; border: 4px solid #6d28d9; padding: 4px; border-radius: 6px; }
+    .hj-qr-text { font-size: 11px; color: #6d28d9; font-weight: 600; letter-spacing: 1.5px; margin-top: 0.75rem; }
   </style>
 </head>
 <body>
@@ -224,19 +358,50 @@
   <!-- ══ OPENING ══ -->
   <div class="inv-opening" id="invOpening">
     <div class="inv-opening-content">
-      <div class="inv-opening-eyebrow">✦ Undangan Pernikahan ✦</div>
-      <div class="inv-opening-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</div>
+      <div class="inv-opening-eyebrow">
+        {% if event.category == 'wedding' %}
+          ✦ Undangan Pernikahan ✦
+        {% elif event.category == 'khitanan' %}
+          ✦ Undangan Khitanan ✦
+        {% else %}
+          ✦ Undangan Resmi / Webinar ✦
+        {% endif %}
+      </div>
+
+      {% if event.category != 'formal' %}
+        <div class="inv-opening-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</div>
+      {% endif %}
+
       <div class="inv-ornament-row">
         <div class="inv-ornament-line"></div>
         <div class="inv-diamond"></div>
         <div class="inv-ornament-line"></div>
       </div>
       <div class="inv-opening-names">{{ event.name|string if event.name else '-' }}</div>
-      <div class="inv-opening-sub">& Keluarga Besar</div>
+      
+      <div class="inv-opening-sub">
+        {% if event.category == 'wedding' or event.category == 'khitanan' %}
+          &amp; Keluarga Besar
+        {% else %}
+          Pihak Penyelenggara Acara
+        {% endif %}
+      </div>
+
       <div class="inv-opening-date">{{ event.date|string if event.date else '-' }}</div>
+      <div class="inv-opening-date" style="margin-top:4px;font-size:9.5px;">{{ event.location|string if event.location else '-' }}</div>
       <button class="inv-open-btn" onclick="openInvitation()">
         <i class="ti ti-envelope-open"></i> Buka Undangan
       </button>
+    </div>
+  </div>
+
+  <!-- ── MODAL INPUT NAMA TAMU MANDIRI ── -->
+  <div class="hj-modal-overlay" id="hjNameModal">
+    <div class="hj-modal-box">
+      <div class="hj-modal-title">Selamat Datang</div>
+      <div class="hj-modal-sub">Mohon masukkan nama lengkap Anda untuk membuka Undangan Digital dan mendapatkan Barcode Kehadiran Anda.</div>
+      <input class="inv-input" style="background:#fff; border: 0.5px solid #f3e8ff; color:#2e1065;" placeholder="Ketik nama lengkap Anda..." id="hjGuestNameInput" required>
+      <button class="inv-send-btn" style="margin-top:10px;" id="hjSubmitNameBtn" onclick="prosesDaftarMandiri()">Buka Undangan</button>
     </div>
   </div>
 
@@ -246,13 +411,21 @@
     <!-- HERO -->
     <div class="inv-hero">
       <div class="inv-hero-content">
-        <div class="inv-hero-tag">Walimatul 'Ursy</div>
+        <div class="inv-hero-tag">
+          {% if event.category == 'wedding' %}
+            WALIMATUL 'URSY
+          {% elif event.category == 'khitanan' %}
+            WALIMATUL KHITAN
+          {% else %}
+            OFFICIAL AGENDA MEETING
+          {% endif %}
+        </div>
         <div class="inv-hero-name">{{ event.name|string if event.name else '-' }}</div>
         <div class="inv-hero-desc">
           {% if event.description and event.description.strip() != "" %}
             {{ event.description|string }}
           {% else %}
-            Mengundang Kehadiran Anda dalam Acara Pernikahan Kami
+            Mengundang Kehadiran Anda dalam Agenda Spesial
           {% endif %}
         </div>
         <div class="inv-hero-sep">
@@ -263,44 +436,70 @@
       </div>
     </div>
 
-    <!-- Ayat -->
+    <!-- Doa / Ayat Dinamis -->
+    {% if event.category != 'formal' %}
     <div class="inv-section" style="background:#fff;">
       <div class="inv-ayat">
-        <div class="inv-ayat-arabic">وَمِنْ آيَاتِهِ أَنْ خَلَقَ Lَكُم مِّنْ أَنfُسِكُم أَزْوَاجًا Lِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً</div>
-        <div class="inv-ayat-trans">"Dan di antara tanda-tanda kekuasaan-Nya, Dia menciptakan untukmu pasangan hidup dari jenismu sendiri agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang."</div>
-        <div class="inv-ayat-source">QS. Ar-Rum : 21</div>
+        {% if event.category == 'wedding' %}
+          <div class="inv-ayat-arabic">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَرَحْمَةً</div>
+          <div class="inv-ayat-trans">"Dan di antara tanda-tanda kekuasaan-Nya, Dia menciptakan untukmu pasangan hidup dari jenismu sendiri agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang."</div>
+          <div class="inv-ayat-source">QS. Ar-Rum : 21</div>
+        {% else %}
+          <div class="inv-ayat-arabic">اَللَّهُمَّ اجْعَلْهُ بَارًّا بِوَالِدَيْهِ وَمُبَارَكًا عَلَى أُمَّتِهِ</div>
+          <div class="inv-ayat-trans">"Ungkapan rasa syukur tulus kami panjatkan atas berkah limpahan kesehatan, keselamatan, serta kelancaran tasyakuran khitan putra kami terkasih."</div>
+          <div class="inv-ayat-source">Doa Keselamatan & Keberkahan Anak</div>
+        {% endif %}
       </div>
     </div>
+    {% endif %}
 
-    <!-- Foto Mempelai -->
+    <!-- Galeri Foto Dinamis -->
+    {% if event.category == 'wedding' or event.category == 'khitanan' %}
     <div class="inv-section" style="background:#fff;">
-      <div class="inv-slabel">Kedua Mempelai</div>
+      <div class="inv-slabel">
+        {{ 'Kedua Mempelai' if event.category == 'wedding' else 'Profil Anak Khitan' }}
+      </div>
       <div class="couple-photos-row">
-        <div class="couple-photo-box">
-          {% if event.gallery and event.gallery|length >= 1 %}
-            <img src="/uploads/gallery/{{ event.gallery[0] }}" onerror="this.src='https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400';" alt="Mempelai Pria">
-          {% else %}
-            <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400" alt="Mempelai Pria">
-          {% endif %}
-          <div class="couple-name-bar">
-            <span>Mempelai Pria</span>
-            <small>Putra Terbaik Keluarga Besar</small>
+        {% if event.category == 'wedding' %}
+          <div class="couple-photo-box">
+            {% if event.gallery and event.gallery|length >= 1 %}
+              <img src="/uploads/gallery/{{ event.gallery[0] }}" onerror="this.src='https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400';" alt="Mempelai Pria">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400" alt="Mempelai Pria">
+            {% endif %}
+            <div class="couple-name-bar">
+              <span>Mempelai Pria</span>
+              <small>Putra Terbaik Keluarga Besar</small>
+            </div>
           </div>
-        </div>
-        <div class="couple-and">&</div>
-        <div class="couple-photo-box">
-          {% if event.gallery and event.gallery|length >= 2 %}
-            <img src="/uploads/gallery/{{ event.gallery[1] }}" onerror="this.src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400';" alt="Mempelai Wanita">
-          {% else %}
-            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400" alt="Mempelai Wanita">
-          {% endif %}
-          <div class="couple-name-bar">
-            <span>Mempelai Wanita</span>
-            <small>Putri Terbaik Keluarga Besar</small>
+          <div class="couple-and">&amp;</div>
+          <div class="couple-photo-box">
+            {% if event.gallery and event.gallery|length >= 2 %}
+              <img src="/uploads/gallery/{{ event.gallery[1] }}" onerror="this.src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400';" alt="Mempelai Wanita">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400" alt="Mempelai Wanita">
+            {% endif %}
+            <div class="couple-name-bar">
+              <span>Mempelai Wanita</span>
+              <small>Putri Terbaik Keluarga Besar</small>
+            </div>
           </div>
-        </div>
+        {% elif event.category == 'khitanan' %}
+          <div class="couple-photo-box" style="flex: 1; max-width: 280px;">
+            {% if event.gallery and event.gallery|length >= 1 %}
+              <img src="/uploads/gallery/{{ event.gallery[0] }}" onerror="this.src='https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=400';" alt="Foto Anak" style="aspect-ratio: 1/1;">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=400" alt="Foto Anak" style="aspect-ratio: 1/1;">
+            {% endif %}
+            <div class="couple-name-bar">
+              <span>Putra Tercinta</span>
+              <small>Buah Hati Kebanggaan Keluarga</small>
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
+    {% endif %}
 
     <!-- Detail Acara -->
     <div class="inv-section">
@@ -342,21 +541,14 @@
         {% if event.rundown %}
           {% for item in event.rundown %}
           <div class="inv-agenda-row">
-            <div class="inv-agenda-dot"></div>
             <div class="inv-agenda-time">{{ item.time|string }}</div>
             <div class="inv-agenda-act">{{ item.activity|string }}</div>
           </div>
           {% endfor %}
         {% else %}
         <div class="inv-agenda-row">
-          <div class="inv-agenda-dot"></div>
           <div class="inv-agenda-time">09.00 – 10.30</div>
-          <div class="inv-agenda-act">Prosesi Akad Nikah Resmi</div>
-        </div>
-        <div class="inv-agenda-row">
-          <div class="inv-agenda-dot"></div>
-          <div class="inv-agenda-time">10.30 – 13.00</div>
-          <div class="inv-agenda-act">Resepsi Pernikahan & Ramah Tamah</div>
+          <div class="inv-agenda-act">Prosesi Acara Inti Utama</div>
         </div>
         {% endif %}
       </div>
@@ -364,14 +556,26 @@
 
     <!-- Ucapan & Doa -->
     <div class="inv-section alt">
-      <div class="inv-slabel">Ucapan & Doa Tamu</div>
+      <div class="inv-slabel">
+        {{ 'Konfirmasi Kehadiran & Ucapan' if event.category == 'formal' else 'Ucapan & Doa Tamu' }}
+      </div>
+
+      <!-- ── WADAH BARCODE QR CODE UNIK ORCHID PURPLE ── -->
+      <div class="hj-qr-wrapper" id="hjQrSection" style="display: none;">
+        <div class="hj-qr-container" id="hjQrImageContainer"></div>
+        <div class="hj-qr-text">BARCODE KEHADIRAN ANDA</div>
+        <p style="font-size:11px; color:#7c3aed; margin-top:6px; padding: 0 10px;">Silakan screenshot barcode ini untuk di-scan oleh panitia di meja tamu saat hari-H acara.</p>
+      </div>
+
       <div class="inv-rsvp-area">
-        <div class="inv-rsvp-sub">Sampaikan doa restu terbaik Anda untuk kedua mempelai</div>
+        <div class="inv-rsvp-sub">
+          {{ 'Sampaikan konfirmasi kehadiran atau dukungan Anda untuk agenda ini' if event.category == 'formal' else 'Sampaikan doa terbaik Anda untuk kelancaran acara' }}
+        </div>
         <form id="commentForm" onsubmit="kirimDoaTamu(event)">
           <input class="inv-input" placeholder="Nama Anda" id="ucapanName" name="name" required>
           <textarea class="inv-input" rows="3" placeholder="Tuliskan doa restu di sini..." id="ucapanMsg" name="message" style="resize:none;" required></textarea>
           <button type="submit" class="inv-send-btn" id="btnKirimDoa">
-            <i class="ti ti-heart" style="margin-right:6px"></i> Kirim Ucapan
+            <i class="{% if event.category == 'formal' %}ti ti-send{% else %}ti ti-heart{% endif %}" style="margin-right:6px"></i> Kirim Ucapan
           </button>
         </form>
       </div>
@@ -392,6 +596,7 @@
     </div>
 
     <!-- Amplop Digital -->
+    {% if event.category != 'formal' %}
     <div class="inv-section">
       <div class="inv-slabel">Hadiah Pernikahan</div>
       <div class="inv-amplop">
@@ -400,10 +605,11 @@
         <div class="inv-amplop-sub">Info rekening untuk tanda kasih hadiah digital:</div>
         <div class="inv-rekening-val">{{ event.rekening|string if event.rekening else '-' }}</div>
         <button class="inv-amplop-btn" onclick="salinRekening()">
-          <i class="ti ti-copy" style="margin-right:4px;"></i> Salin Info Rekening
+          <i class="ti ti-copy" style="margin-right:4px;"></i> Info Rekening
         </button>
       </div>
     </div>
+    {% endif %}
 
     <!-- Footer -->
     <div class="inv-footer">
@@ -426,7 +632,12 @@
   <!-- Music Bar -->
   <div class="inv-music-bar" id="musicBar" style="display:none;">
     <div class="inv-music-title">
-      <i class="ti ti-music" style="margin-right:5px"></i> Sholawat Badar Instrument
+      <i class="ti ti-music" style="margin-right:5px"></i> 
+      {% if event.category == 'formal' %}
+        Instrumental Corporate Background Music
+      {% else %}
+        Sholawat Badar Instrument
+      {% endif %}
     </div>
     <button class="inv-music-btn" id="musicBtn" onclick="toggleMusic()">
       <i class="ti ti-player-play" id="musicIcon"></i>
@@ -436,69 +647,125 @@
 </div>
 
 <script>
-  var musicPlaying = false;
+  if (typeof window.musicPlaying === 'undefined') {
+    window.musicPlaying = false;
+  }
+
+  const QR_API_URL = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=";
 
   function openInvitation() {
-    document.getElementById('invOpening').style.display = 'none';
-    document.getElementById('invMain').classList.add('visible');
-    document.getElementById('musicBar').style.display = 'flex';
-    startCountdown();
+    document.getElementById('hjNameModal').classList.add('active');
+  }
+
+  function prosesDaftarMandiri() {
+    const nameInput = document.getElementById('hjGuestNameInput');
+    const btnSubmit = document.getElementById('hjSubmitNameBtn');
+    const guestName = nameInput.value.trim();
+
+    if (!guestName) {
+      alert('Silakan masukkan nama lengkap Anda terlebih dahulu.');
+      return;
+    }
+
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="ti ti-loader"></i> Memproses...';
+
+    fetch('/api/guests/{{ event._id|string }}/register-self', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: guestName })
+    })
+    .then(response => response.json())
+    .then(res => {
+      if (res.status === 'success' || res.data) {
+        const qrDataString = res.data.qr_code;
+
+        const qrImgContainer = document.getElementById('hjQrImageContainer');
+        qrImgContainer.innerHTML = `<img src="${QR_API_URL}${encodeURIComponent(qrDataString)}" alt="QR Code Tamu">`;
+        document.getElementById('hjQrSection').style.display = 'block';
+
+        document.getElementById('ucapanName').value = guestName;
+
+        document.getElementById('hjNameModal').classList.remove('active');
+        document.getElementById('invOpening').style.display = 'none';
+        document.getElementById('invMain').classList.add('visible');
+        document.getElementById('musicBar').style.display = 'flex';
+        startCountdown();
+      } else {
+        alert(res.message || 'Gagal memproses pendaftaran nama.');
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = 'Buka Undangan';
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Terjadi gangguan koneksi ke server Flask.');
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = 'Buka Undangan';
+    });
   }
 
   function kirimDoaTamu(event) {
     event.preventDefault();
-    var nameInput = document.getElementById('ucapanName');
-    var msgInput  = document.getElementById('ucapanMsg');
-    var btnKirim  = document.getElementById('btnKirimDoa');
-    var name      = nameInput.value.trim();
-    var message   = msgInput.value.trim();
+    const nameInput = document.getElementById('ucapanName');
+    const msgInput  = document.getElementById('ucapanMsg');
+    const btnKirim  = document.getElementById('btnKirimDoa');
+    const name      = nameInput.value.trim();
+    const message   = msgInput.value.trim();
     if (!name || !message) { alert('Mohon isi nama dan ucapan Anda.'); return; }
 
     btnKirim.disabled = true;
     btnKirim.innerHTML = 'Mengirim...';
 
-    var formData = new FormData();
+    const formData = new FormData();
     formData.append('name', name);
     formData.append('message', message);
 
     fetch('/api/events/rsvp/{{ event._id|string }}/comment', { method: 'POST', body: formData })
-      .then(function(response) {
+      .then(response => {
         if (response.ok) {
-          var list          = document.getElementById('ucapanList');
-          var noCommentText = document.getElementById('noCommentText');
+          const list          = document.getElementById('ucapanList');
+          const noCommentText = document.getElementById('noCommentText');
           if (noCommentText) noCommentText.remove();
 
-          var newItem = document.createElement('div');
+          const newItem = document.createElement('div');
           newItem.className = 'inv-ucapan-item';
-          newItem.innerHTML = '<div class="inv-ucapan-name">' + name + '</div><div class="inv-ucapan-msg">"' + message + '"</div>';
+          newItem.innerHTML = `
+            <div class="inv-ucapan-name">${name}</div>
+            <div class="inv-ucapan-msg">"${message}"</div>
+          `;
           list.insertBefore(newItem, list.firstChild);
           if (list.children.length > 3) list.lastChild.remove();
 
-          nameInput.value = '';
           msgInput.value  = '';
           alert('Terima kasih! Ucapan doa Anda berhasil dikirim.');
         } else {
           alert('Gagal mengirim ucapan. Silakan coba lagi.');
         }
       })
-      .catch(function() { alert('Terjadi kesalahan koneksi ke server.'); })
-      .finally(function() {
+      .catch(() => alert('Terjadi kesalahan koneksi ke server.'))
+      .finally(() => {
         btnKirim.disabled = false;
-        btnKirim.innerHTML = 'Kirim Ucapan';
+        const category = "{{ event.category }}";
+        if (category === 'formal') {
+          btnKirim.innerHTML = '<i class="ti ti-send" style="margin-right:6px"></i> Kirim Ucapan';
+        } else {
+          btnKirim.innerHTML = '<i class="ti ti-heart" style="margin-right:6px"></i> Kirim Ucapan';
+        }
       });
   }
 
   function salinRekening() {
-    var teks = "{{ event.rekening|string if event.rekening else '' }}";
+    const teks = "{{ event.rekening|string if event.rekening else '' }}";
     if (!teks || teks === '-') { alert('Info rekening belum diatur.'); return; }
     navigator.clipboard.writeText(teks)
-      .then(function() { alert('Info rekening berhasil disalin!'); })
-      .catch(function() { alert('Gagal menyalin info rekening.'); });
+      .then(() => alert('Info rekening berhasil disalin!'))
+      .catch(() => alert('Gagal menyalin info rekening.'));
   }
 
   function toggleMusic() {
-    musicPlaying = !musicPlaying;
-    document.getElementById('musicIcon').className = musicPlaying ? 'ti ti-player-pause' : 'ti ti-player-play';
+    window.musicPlaying = !window.musicPlaying;
+    document.getElementById('musicIcon').className = window.musicPlaying ? 'ti ti-player-pause' : 'ti ti-player-play';
   }
 
   function shareWA() {
@@ -507,39 +774,29 @@
 
   function copyLink() {
     navigator.clipboard.writeText(window.location.href)
-      .then(function() { alert('Link undangan berhasil disalin!'); })
-      .catch(function() { alert('Gagal menyalin link.'); });
+      .then(() => alert('Link undangan berhasil disalin!'))
+      .catch(() => alert('Gagal menyalin link.'));
   }
 
   function startCountdown() {
-    var raw = '{{ event.date|string if event.date else "" }}';
-    var parts = raw.match(/\d+/g);
-    var target;
+    const raw = '{{ event.date|string if event.date else "" }}';
+    const parts = raw.match(/\d+/g);
+    let target;
     if (parts && parts.length >= 3) {
       target = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     } else {
       target = new Date(Date.now() + 30 * 24 * 3600 * 1000);
     }
-    
     function tick() {
-      var diff = target - new Date();
+      const diff = target - new Date();
       if (diff <= 0) {
-        document.getElementById('cdDays').textContent = '00';
-        document.getElementById('cdHours').textContent = '00';
-        document.getElementById('cdMins').textContent = '00';
-        document.getElementById('cdSecs').textContent = '00';
+        ['cdDays','cdHours','cdMins','cdSecs'].forEach(id => document.getElementById(id).textContent = '00');
         return;
       }
-      
-      var d = Math.floor(diff / 86400000);
-      var h = Math.floor((diff % 86400000) / 3600000);
-      var m = Math.floor((diff % 3600000) / 60000);
-      var s = Math.floor((diff % 60000) / 1000);
-      
-      document.getElementById('cdDays').textContent  = (d < 10 ? '0' : '') + d;
-      document.getElementById('cdHours').textContent = (h < 10 ? '0' : '') + h;
-      document.getElementById('cdMins').textContent  = (m < 10 ? '0' : '') + m;
-      document.getElementById('cdSecs').textContent  = (s < 10 ? '0' : '') + s;
+      document.getElementById('cdDays').textContent  = String(Math.floor(diff / 86400000)).padStart(2,'0');
+      document.getElementById('cdHours').textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2,'0');
+      document.getElementById('cdMins').textContent  = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
+      document.getElementById('cdSecs').textContent  = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
     }
     tick();
     setInterval(tick, 1000);
