@@ -12,7 +12,7 @@ from services.notification_service import send_push_notification
 from services.log_service import create_activity_log
 from routes.notification_routes import notification_bp
 from routes.review_routes import review_bp
-from datetime import datetime, timedelta  # 🟢 Ditambahkan timedelta untuk durasi token
+from datetime import datetime, timedelta
 from routes.activity_log_routes import activity_log_bp
 from routes.guest_routes import guest_bp
 from bson import ObjectId
@@ -1124,6 +1124,351 @@ def get_service_stats_web():
             "total_services": 0, 
             "popular_service": "Gagal memuat", 
             "popular_vendor": "-"
+        }), 500
+    
+
+# ==============================================================================
+# API YOUTUBE: VIDEO TERBARU UNTUK BERANDA USER DAN VENDOR
+# ==============================================================================
+@app.route("/api/youtube/latest", methods=["GET"])
+def get_latest_youtube_videos():
+    try:
+        # Jumlah default 5 video, maksimal 10
+        limit = request.args.get("limit", default=5, type=int)
+
+        if limit is None:
+            limit = 5
+
+        limit = max(1, min(limit, 10))
+
+        # Mengambil video terbaru dari MongoDB
+        cursor = (
+            db.youtube_vendor
+            .find(
+                {
+                    "video_id": {
+                        "$exists": True,
+                        "$ne": ""
+                    }
+                },
+                {
+                    "_id": 0,
+                    "video_id": 1,
+                    "kategori": 1,
+                    "categories": 1,
+                    "title": 1,
+                    "description": 1,
+                    "channel": 1,
+                    "thumbnail": 1,
+                    "publish_date": 1,
+                    "video_link": 1
+                }
+            )
+            .sort("publish_date", -1)
+            .limit(limit)
+        )
+
+        videos = list(cursor)
+
+        return jsonify({
+            "status": "success",
+            "total": len(videos),
+            "data": videos
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR YOUTUBE LATEST]: {str(e)}")
+
+        return jsonify({
+            "status": "error",
+            "message": "Gagal mengambil video terbaru",
+            "data": []
+        }), 500
+    
+# ==============================================================================
+# API YOUTUBE: DAFTAR SEMUA VIDEO UNTUK HALAMAN INSIGHT
+# ==============================================================================
+@app.route("/api/youtube/videos", methods=["GET"])
+def get_youtube_videos():
+    try:
+        kategori = request.args.get("kategori", "").strip()
+        page = request.args.get("page", default=1, type=int)
+        limit = request.args.get("limit", default=10, type=int)
+
+        page = max(page or 1, 1)
+        limit = max(1, min(limit or 10, 50))
+
+        query = {
+            "video_id": {
+                "$exists": True,
+                "$ne": ""
+            }
+        }
+
+        # Filter kategori jika pengguna memilih kategori tertentu
+        if kategori and kategori.lower() != "semua":
+            query["categories"] = {
+                "$regex": f"^{kategori}$",
+                "$options": "i"
+            }
+
+        total_data = db.youtube_vendor.count_documents(query)
+
+        videos = list(
+            db.youtube_vendor
+            .find(
+                query,
+                {
+                    "_id": 0,
+                    "video_id": 1,
+                    "kategori": 1,
+                    "categories": 1,
+                    "title": 1,
+                    "description": 1,
+                    "channel": 1,
+                    "thumbnail": 1,
+                    "publish_date": 1,
+                    "video_link": 1
+                }
+            )
+            .sort("publish_date", -1)
+            .skip((page - 1) * limit)
+            .limit(limit)
+        )
+
+        return jsonify({
+            "status": "success",
+            "page": page,
+            "limit": limit,
+            "total_data": total_data,
+            "total_pages": (total_data + limit - 1) // limit,
+            "data": videos
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR YOUTUBE VIDEOS]: {str(e)}")
+
+        return jsonify({
+            "status": "error",
+            "message": "Gagal mengambil daftar video",
+            "data": []
+        }), 500
+    
+# ==============================================================================
+# API YOUTUBE: RINGKASAN INSIGHT UNTUK DASHBOARD APLIKASI
+# ==============================================================================
+@app.route("/api/youtube/summary", methods=["GET"])
+def get_youtube_summary():
+    try:
+        # Hanya menghitung dokumen yang mempunyai video_id
+        video_query = {
+            "video_id": {
+                "$exists": True,
+                "$ne": ""
+            }
+        }
+
+        # Menghitung seluruh video
+        total_video = db.youtube_vendor.count_documents(video_query)
+
+        # ==============================================================
+        # ANALISIS JUMLAH VIDEO PER KATEGORI
+        #
+        # Data baru memakai field categories berbentuk array.
+        # Data lama yang belum mempunyai categories memakai field kategori.
+        # ==============================================================
+        pipeline_kategori = [
+            {
+                "$match": video_query
+            },
+            {
+                "$set": {
+                    "categories_normalized": {
+                        "$cond": [
+                            # Memeriksa apakah categories berbentuk array
+                            {
+                                "$isArray": "$categories"
+                            },
+
+                            # Jika categories berbentuk array
+                            {
+                                "$cond": [
+                                    # Jika array categories tidak kosong
+                                    {
+                                        "$gt": [
+                                            {
+                                                "$size": "$categories"
+                                            },
+                                            0
+                                        ]
+                                    },
+
+                                    # Gunakan categories
+                                    "$categories",
+
+                                    # Jika categories kosong, gunakan kategori
+                                    {
+                                        "$cond": [
+                                            {
+                                                "$ne": [
+                                                    {
+                                                        "$ifNull": [
+                                                            "$kategori",
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            },
+                                            [
+                                                "$kategori"
+                                            ],
+                                            []
+                                        ]
+                                    }
+                                ]
+                            },
+
+                            # Jika categories tidak berbentuk array
+                            # atau field categories belum tersedia
+                            {
+                                "$cond": [
+                                    {
+                                        "$ne": [
+                                            {
+                                                "$ifNull": [
+                                                    "$kategori",
+                                                    ""
+                                                ]
+                                            },
+                                            ""
+                                        ]
+                                    },
+                                    [
+                                        "$kategori"
+                                    ],
+                                    []
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "$unwind": "$categories_normalized"
+            },
+            {
+                "$match": {
+                    "categories_normalized": {
+                        "$nin": [
+                            "",
+                            None
+                        ]
+                    }
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$categories_normalized",
+                    "jumlah": {
+                        "$sum": 1
+                    }
+                }
+            },
+            {
+                "$sort": {
+                    "jumlah": -1,
+                    "_id": 1
+                }
+            }
+        ]
+
+        hasil_kategori = list(
+            db.youtube_vendor.aggregate(pipeline_kategori)
+        )
+
+        category_stats = []
+
+        for item in hasil_kategori:
+            category_stats.append({
+                "kategori": item.get(
+                    "_id",
+                    "Tidak diketahui"
+                ),
+                "jumlah": item.get(
+                    "jumlah",
+                    0
+                )
+            })
+
+        # ==============================================================
+        # MENGAMBIL WAKTU COLLECTION TERAKHIR
+        # ==============================================================
+        latest_document = db.youtube_vendor.find_one(
+            {
+                "video_id": {
+                    "$exists": True,
+                    "$ne": ""
+                },
+                "last_collected_at": {
+                    "$exists": True,
+                    "$ne": None
+                }
+            },
+            {
+                "_id": 0,
+                "last_collected_at": 1
+            },
+            sort=[
+                (
+                    "last_collected_at",
+                    -1
+                )
+            ]
+        )
+
+        last_update = None
+
+        if latest_document:
+            waktu = latest_document.get(
+                "last_collected_at"
+            )
+
+            if waktu:
+                last_update = waktu.isoformat()
+
+        # Total seluruh penempatan kategori
+        total_data_kategori = sum(
+            item["jumlah"]
+            for item in category_stats
+        )
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "total_video": total_video,
+                "total_kategori": len(category_stats),
+                "total_data_kategori": total_data_kategori,
+                "last_update": last_update,
+                "category_stats": category_stats
+            }
+        }), 200
+
+    except Exception as e:
+        print(
+            f"[ERROR YOUTUBE SUMMARY]: {str(e)}"
+        )
+
+        return jsonify({
+            "status": "error",
+            "message": "Gagal mengambil ringkasan insight",
+            "data": {
+                "total_video": 0,
+                "total_kategori": 0,
+                "total_data_kategori": 0,
+                "last_update": None,
+                "category_stats": []
+            }
         }), 500
 
 if __name__ == "__main__":
