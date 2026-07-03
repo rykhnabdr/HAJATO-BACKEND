@@ -88,7 +88,13 @@ for kategori, keyword in keywords.items():
 print(f"Jumlah data yang berhasil diambil: {len(collected_data)}")
 
 # Membuat video_id menjadi unik agar data tidak duplikat
-collection.create_index("video_id", unique=True)
+collection.create_index(
+    "video_id",
+    unique=True,
+    partialFilterExpression={
+        "video_id": {"$type": "string"}
+    }
+)
 
 jumlah_baru = 0
 jumlah_diperbarui = 0
