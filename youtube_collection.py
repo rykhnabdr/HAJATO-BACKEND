@@ -32,33 +32,18 @@ if not MONGO_URI:
 # =========================================================
 
 def clean_text(text):
-    """
-    Membersihkan teks dengan tahapan:
-    1. Mengubah HTML entity menjadi karakter biasa
-    2. Mengubah teks menjadi huruf kecil
-    3. Menghapus URL
-    4. Menghapus tanda baca dan simbol
-    5. Menghapus spasi berlebih
-    """
-
     if not text:
         return ""
 
-    # Mengubah HTML entity, contoh: &amp; menjadi &
     text = html.unescape(str(text))
-
-    # Mengubah semua teks menjadi huruf kecil
     text = text.lower()
 
-    # Menghapus URL
     text = re.sub(
         r"https?://\S+|www\.\S+",
         " ",
         text
     )
 
-    # Menghapus tanda baca dan simbol
-    # Huruf, angka, dan spasi tetap dipertahankan
     text = re.sub(
         r"[^\w\s]",
         " ",
@@ -66,10 +51,8 @@ def clean_text(text):
         flags=re.UNICODE
     )
 
-    # Menghapus underscore
     text = text.replace("_", " ")
 
-    # Menghapus spasi berlebih
     text = re.sub(
         r"\s+",
         " ",
@@ -105,6 +88,46 @@ keywords = {
 
 
 # =========================================================
+# 2A. FUNGSI CEK COUNTRY CHANNEL
+# Hanya channel dengan country ID yang akan disimpan
+# =========================================================
+
+channel_country_cache = {}
+
+def get_channel_country(channel_id):
+    if not channel_id:
+        return ""
+
+    if channel_id in channel_country_cache:
+        return channel_country_cache[channel_id]
+
+    try:
+        request = youtube.channels().list(
+            part="snippet",
+            id=channel_id
+        )
+
+        response = request.execute()
+        items = response.get("items", [])
+
+        country = ""
+
+        if items:
+            country = items[0].get("snippet", {}).get("country", "")
+
+        country = country.upper()
+
+        channel_country_cache[channel_id] = country
+
+        return country
+
+    except Exception as error:
+        print(f"Gagal mengecek country channel {channel_id}: {error}")
+        channel_country_cache[channel_id] = ""
+        return ""
+
+
+# =========================================================
 # 3. DATA STORAGE MENGGUNAKAN MONGODB
 # Membuat koneksi ke MongoDB Atlas
 # =========================================================
@@ -117,7 +140,6 @@ mongo_client = MongoClient(
 database = mongo_client["hajato_db"]
 collection = database["youtube_vendor"]
 
-# Mengecek koneksi MongoDB
 mongo_client.admin.command("ping")
 
 print("Koneksi MongoDB berhasil")
@@ -126,10 +148,14 @@ print("Koneksi MongoDB berhasil")
 # Waktu proses collection dijalankan
 collection_time = datetime.now(timezone.utc)
 
+# ID batch untuk menandai hasil collection terbaru
+collection_batch_id = collection_time.strftime("%Y%m%d%H%M%S")
+
 
 # =========================================================
 # 4. PROSES DATA COLLECTION
 # Mengambil data video dari YouTube berdasarkan keyword
+# dan hanya menyimpan channel dengan country Indonesia
 # =========================================================
 
 raw_data = []
@@ -138,7 +164,7 @@ for kategori, keyword in keywords.items():
     print(f"Mengambil data kategori: {kategori}")
 
     request = youtube.search().list(
-        q=keyword,
+        q=f"{keyword} Indonesia",
         part="snippet",
         type="video",
         maxResults=10,
@@ -153,11 +179,22 @@ for kategori, keyword in keywords.items():
         video_id = item.get("id", {}).get("videoId")
         snippet = item.get("snippet", {})
 
-        # Melewati data yang tidak memiliki video_id
         if not video_id:
             continue
 
-        # Mengambil thumbnail secara aman
+        channel_id = snippet.get("channelId", "")
+        channel_country = get_channel_country(channel_id)
+
+        # Filter utama:
+        # hanya simpan video dari channel dengan country Indonesia
+        if channel_country != "ID":
+            print(
+                f"Skip bukan channel Indonesia: "
+                f"{snippet.get('channelTitle', '')} "
+                f"| country={channel_country or 'UNKNOWN'}"
+            )
+            continue
+
         thumbnails = snippet.get("thumbnails", {})
 
         thumbnail_data = (
@@ -169,13 +206,14 @@ for kategori, keyword in keywords.items():
 
         thumbnail_url = thumbnail_data.get("url", "")
 
-        # Data mentah hasil collection YouTube
         video_data = {
             "video_id": video_id,
             "kategori": kategori,
             "title": snippet.get("title", ""),
             "description": snippet.get("description", ""),
             "channel": snippet.get("channelTitle", ""),
+            "channel_id": channel_id,
+            "channel_country": channel_country,
             "thumbnail": thumbnail_url,
             "publish_date": snippet.get("publishedAt", ""),
             "video_link": (
@@ -186,22 +224,13 @@ for kategori, keyword in keywords.items():
         raw_data.append(video_data)
 
 print(
-    f"Jumlah data mentah yang berhasil diambil: "
+    f"Jumlah data mentah dari channel Indonesia: "
     f"{len(raw_data)}"
 )
 
 
 # =========================================================
 # 5. DATA PREPARATION
-#
-# Tahapan:
-# - Memilih atribut yang diperlukan
-# - Menangani data kosong
-# - Membersihkan judul
-# - Membersihkan deskripsi
-# - Menghapus duplikasi dalam satu kali collection
-# - Menggabungkan kategori jika satu video ditemukan
-#   pada beberapa keyword
 # =========================================================
 
 prepared_by_video_id = {}
@@ -209,7 +238,6 @@ prepared_by_video_id = {}
 for data in raw_data:
     video_id = data.get("video_id", "").strip()
 
-    # Melewati data tanpa video_id
     if not video_id:
         continue
 
@@ -221,32 +249,27 @@ for data in raw_data:
         prepared_by_video_id[video_id] = {
             "video_id": video_id,
 
-            # Kategori utama
             "kategori": kategori,
-
-            # Menampung semua kategori yang sesuai
             "categories": [kategori] if kategori else [],
 
-            # Teks asli
             "title": title,
             "description": description,
 
-            # Teks yang sudah dibersihkan
             "clean_title": clean_text(title),
             "clean_description": clean_text(description),
 
             "channel": data.get("channel", "").strip(),
+            "channel_id": data.get("channel_id", "").strip(),
+            "channel_country": data.get("channel_country", "").strip(),
+
             "thumbnail": data.get("thumbnail", "").strip(),
             "publish_date": data.get("publish_date", "").strip(),
             "video_link": data.get("video_link", "").strip(),
 
-            # Waktu terakhir video diperoleh
             "last_collected_at": collection_time
         }
 
     else:
-        # Jika satu video ditemukan pada keyword lain,
-        # kategori tersebut ditambahkan ke array categories
         existing_categories = prepared_by_video_id[
             video_id
         ]["categories"]
@@ -264,11 +287,56 @@ print(
 
 
 # =========================================================
-# 6. DATA PREPARATION: PENCEGAHAN DUPLIKASI MONGODB
+# 6. VALIDASI DATA BARU
 #
-# video_id dijadikan field unik.
-# Data lama yang tidak memiliki video_id akan diabaikan
-# oleh partialFilterExpression.
+# Data lama TIDAK akan dihapus jika:
+# - collection gagal
+# - data kosong
+# - data terlalu sedikit
+# - kategori terlalu sedikit
+# =========================================================
+
+MIN_TOTAL_DATA = 10
+MIN_TOTAL_KATEGORI = 3
+
+if not prepared_data:
+    raise ValueError(
+        "Prepared data kosong. Data lama tidak dihapus."
+    )
+
+if len(prepared_data) < MIN_TOTAL_DATA:
+    raise ValueError(
+        f"Jumlah data terlalu sedikit: {len(prepared_data)}. "
+        "Data lama tidak dihapus."
+    )
+
+kategori_terkumpul = set()
+
+for data_video in prepared_data:
+    for kategori in data_video.get("categories", []):
+        if kategori:
+            kategori_terkumpul.add(kategori)
+
+if len(kategori_terkumpul) < MIN_TOTAL_KATEGORI:
+    raise ValueError(
+        f"Kategori yang terkumpul hanya {len(kategori_terkumpul)}. "
+        "Data lama tidak dihapus."
+    )
+
+print("Validasi data baru berhasil")
+print(f"Jumlah data valid: {len(prepared_data)}")
+print(f"Jumlah kategori valid: {len(kategori_terkumpul)}")
+
+
+# =========================================================
+# 7. DATA STORAGE KE MONGODB DENGAN SISTEM BATCH
+#
+# Alur:
+# 1. Data baru di-insert/update dulu
+# 2. Kalau proses berhasil, data lama yang bukan batch terbaru dihapus
+#
+# Jadi kalau collection hari ini gagal,
+# data kemarin tetap aman.
 # =========================================================
 
 collection.create_index(
@@ -281,29 +349,20 @@ collection.create_index(
     }
 )
 
-
-# =========================================================
-# 7. DATA STORAGE KE MONGODB
-#
-# Jika video_id belum tersedia:
-# → data baru dimasukkan
-#
-# Jika video_id sudah tersedia:
-# → data lama diperbarui
-# =========================================================
-
 jumlah_baru = 0
 jumlah_diperbarui = 0
 
 for data_video in prepared_data:
+    data_video["collection_batch_id"] = collection_batch_id
+    data_video["collection_date"] = collection_time.strftime("%Y-%m-%d")
+    data_video["last_collected_at"] = collection_time
+
     hasil = collection.update_one(
         {
             "video_id": data_video["video_id"]
         },
         {
             "$set": data_video,
-
-            # created_at hanya dibuat ketika dokumen baru
             "$setOnInsert": {
                 "created_at": collection_time
             }
@@ -319,6 +378,20 @@ for data_video in prepared_data:
 
 print(f"Data baru masuk: {jumlah_baru}")
 print(f"Data lama diperbarui: {jumlah_diperbarui}")
+
+
+hapus_data_lama = collection.delete_many(
+    {
+        "collection_batch_id": {
+            "$ne": collection_batch_id
+        }
+    }
+)
+
+print(
+    f"Data lama yang bukan batch terbaru dihapus: "
+    f"{hapus_data_lama.deleted_count}"
+)
 
 
 # =========================================================
