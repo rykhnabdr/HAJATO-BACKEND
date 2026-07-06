@@ -1,5 +1,10 @@
 import os  # 🟢 WAJIB: Untuk manajemen folder upload biner foto asli
-from flask import Flask, render_template, request, redirect, session, jsonify, send_from_directory
+import time
+from flask import request, jsonify
+from bson.objectid import ObjectId
+from werkzeug.utils import secure_filename
+# 🟢 FIX: Menambahkan url_for pada baris import Flask utama
+from flask import Flask, render_template, request, redirect, session, jsonify, send_from_directory, url_for
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from bson.objectid import ObjectId
@@ -16,6 +21,7 @@ from datetime import datetime, timedelta
 from routes.activity_log_routes import activity_log_bp
 from routes.guest_routes import guest_bp
 from bson import ObjectId
+from routes.banner_routes import banner_bp
 
 # ========================================================
 # 🟢 TAMBAHAN TAMU & ACARA: Import Blueprint Event Baru
@@ -32,12 +38,17 @@ from routes.chat_routes import chat_bp
 app = Flask(__name__)
 app.secret_key = "SECRET_ADMIN"
 
-# ── 🟢 CONFIG GLOBAL: Jalur Penyimpanan Folder Upload Gambar HP ───────
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+# ── 🟢 CONFIG GLOBAL: Jalur Penyimpanan Folder Upload Gambar HAJATO ───────
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
-# Bikin sub-folder gallery otomatis di VPS/Laptop biar ga error pas simpan file
-os.makedirs(os.path.join(UPLOAD_FOLDER, 'gallery'), exist_ok=True)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Bikin folder static/uploads dan sub-folder gallery otomatis di VPS/Laptop biar ga error pas simpan file
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'gallery'), exist_ok=True)
 
 app.config["JWT_SECRET_KEY"] = settings.JWT_SECRET_KEY
 # ── 🟢 FIX TOKEN EXPIRED: Token dibikin aktif selama 30 hari biar ga bolak-balik login ──
@@ -63,6 +74,7 @@ app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(vendor_bp)
 app.register_blueprint(booking_bp)
 app.register_blueprint(payment_bp)
+app.register_blueprint(banner_bp)
 
 app.register_blueprint(chat_bp)
 
@@ -1273,9 +1285,6 @@ def get_youtube_summary():
 
         # ==============================================================
         # ANALISIS JUMLAH VIDEO PER KATEGORI
-        #
-        # Data baru memakai field categories berbentuk array.
-        # Data lama yang belum mempunyai categories memakai field kategori.
         # ==============================================================
         pipeline_kategori = [
             {
@@ -1285,68 +1294,24 @@ def get_youtube_summary():
                 "$set": {
                     "categories_normalized": {
                         "$cond": [
-                            # Memeriksa apakah categories berbentuk array
-                            {
-                                "$isArray": "$categories"
-                            },
-
-                            # Jika categories berbentuk array
+                            {"$isArray": "$categories"},
                             {
                                 "$cond": [
-                                    # Jika array categories tidak kosong
-                                    {
-                                        "$gt": [
-                                            {
-                                                "$size": "$categories"
-                                            },
-                                            0
-                                        ]
-                                    },
-
-                                    # Gunakan categories
+                                    {"$gt": [{"$size": "$categories"}, 0]},
                                     "$categories",
-
-                                    # Jika categories kosong, gunakan kategori
                                     {
                                         "$cond": [
-                                            {
-                                                "$ne": [
-                                                    {
-                                                        "$ifNull": [
-                                                            "$kategori",
-                                                            ""
-                                                        ]
-                                                    },
-                                                    ""
-                                                ]
-                                            },
-                                            [
-                                                "$kategori"
-                                            ],
+                                            {"$ne": [{"$ifNull": ["$kategori", ""]}, ""]},
+                                            ["$kategori"],
                                             []
                                         ]
                                     }
                                 ]
                             },
-
-                            # Jika categories tidak berbentuk array
-                            # atau field categories belum tersedia
                             {
                                 "$cond": [
-                                    {
-                                        "$ne": [
-                                            {
-                                                "$ifNull": [
-                                                    "$kategori",
-                                                    ""
-                                                ]
-                                            },
-                                            ""
-                                        ]
-                                    },
-                                    [
-                                        "$kategori"
-                                    ],
+                                    {"$ne": [{"$ifNull": ["$kategori", ""]}, ""]},
+                                    ["$kategori"],
                                     []
                                 ]
                             }
@@ -1354,94 +1319,48 @@ def get_youtube_summary():
                     }
                 }
             },
-            {
-                "$unwind": "$categories_normalized"
-            },
+            {"$unwind": "$categories_normalized"},
             {
                 "$match": {
                     "categories_normalized": {
-                        "$nin": [
-                            "",
-                            None
-                        ]
+                        "$nin": ["", None]
                     }
                 }
             },
             {
                 "$group": {
                     "_id": "$categories_normalized",
-                    "jumlah": {
-                        "$sum": 1
-                    }
+                    "jumlah": {"$sum": 1}
                 }
             },
-            {
-                "$sort": {
-                    "jumlah": -1,
-                    "_id": 1
-                }
-            }
+            {"$sort": {"jumlah": -1, "_id": 1}}
         ]
 
-        hasil_kategori = list(
-            db.youtube_vendor.aggregate(pipeline_kategori)
-        )
-
+        hasil_kategori = list(db.youtube_vendor.aggregate(pipeline_kategori))
         category_stats = []
 
         for item in hasil_kategori:
             category_stats.append({
-                "kategori": item.get(
-                    "_id",
-                    "Tidak diketahui"
-                ),
-                "jumlah": item.get(
-                    "jumlah",
-                    0
-                )
+                "kategori": item.get("_id", "Tidak diketahui"),
+                "jumlah": item.get("jumlah", 0)
             })
 
-        # ==============================================================
-        # MENGAMBIL WAKTU COLLECTION TERAKHIR
-        # ==============================================================
         latest_document = db.youtube_vendor.find_one(
             {
-                "video_id": {
-                    "$exists": True,
-                    "$ne": ""
-                },
-                "last_collected_at": {
-                    "$exists": True,
-                    "$ne": None
-                }
+                "video_id": {"$exists": True, "$ne": ""},
+                "last_collected_at": {"$exists": True, "$ne": None}
             },
-            {
-                "_id": 0,
-                "last_collected_at": 1
-            },
-            sort=[
-                (
-                    "last_collected_at",
-                    -1
-                )
-            ]
+            {"_id": 0, "last_collected_at": 1},
+            sort=[("last_collected_at", -1)]
         )
 
         last_update = None
-
         if latest_document:
-            waktu = latest_document.get(
-                "last_collected_at"
-            )
-
+            waktu = latest_document.get("last_collected_at")
             if waktu:
                 last_update = waktu.isoformat()
 
-        # Total seluruh penempatan kategori
-        total_data_kategori = sum(
-            item["jumlah"]
-            for item in category_stats
-        )
+        total_data_kategori = sum(item["jumlah"] for item in category_stats)
 
         return jsonify({
             "status": "success",
@@ -1455,10 +1374,7 @@ def get_youtube_summary():
         }), 200
 
     except Exception as e:
-        print(
-            f"[ERROR YOUTUBE SUMMARY]: {str(e)}"
-        )
-
+        print(f"[ERROR YOUTUBE SUMMARY]: {str(e)}")
         return jsonify({
             "status": "error",
             "message": "Gagal mengambil ringkasan insight",
@@ -1470,6 +1386,61 @@ def get_youtube_summary():
                 "category_stats": []
             }
         }), 500
+
+# ==============================================================================
+# 🟢 HALAMAN WEB ADMIN BANNER (SINKRON DATA LIST UNTUK FORM EDIT & HAPUS)
+# ==============================================================================
+@app.route('/admin/banners')
+def banners_page():
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+        
+    try:
+        # Ambil semua data banner dari MongoDB (di-sort dari yang terbaru)
+        banners_cursor = db['banners'].find().sort("_id", -1)
+        
+        all_banners = []
+        for b in banners_cursor:
+            all_banners.append({
+                "id": str(b["_id"]),
+                "title": b.get("title", "-"),
+                "subtitle": b.get("subtitle", "-"),
+                "image_url": b.get("image_url", ""),
+                "is_active": b.get("is_active", True)
+            })
+            
+        # Kirim data 'all_banners' ke dalam file HTML lo
+        return render_template('banners.html', active_page='banners', banners=all_banners)
+    except Exception as e:
+        print(f"[ERROR ADMIN BANNERS PAGE]: {str(e)}")
+        return render_template('banners.html', active_page='banners', banners=[], error=str(e))
+
+
+# ==============================================================================
+# 🟢 ENDPOINT GET BANNER AKTIF (LANGSUNG DI APP.PY UNTUK AKURASI FLUTTER)
+# ==============================================================================
+@app.route("/api/banners/active", methods=["GET"])
+def get_active_banners_direct():
+    try:
+        banners_collection = db['banners']
+        cursor = banners_collection.find({"is_active": True})
+        
+        banners_list = []
+        for banner in cursor:
+            banners_list.append({
+                "title": banner.get("title", "Info Spesial"),
+                "subtitle": banner.get("subtitle", ""),
+                "image_url": banner.get("image_url", ""),
+                "click_action": banner.get("click_action", "route_to_tips")
+            })
+        
+        return jsonify({
+            "status": "success",
+            "data": banners_list
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(
