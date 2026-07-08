@@ -24,11 +24,17 @@ from config.mail_config import mail
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
+from services.face_service import generate_embedding_from_file, cosine_similarity
+
 auth_bp = Blueprint('auth', __name__)
 
 users = db.users
 vendor_registrations = db.vendor_registrations
 otp_collection = db.otp_codes
+face_embeddings = db.face_embeddings
+
+FACE_LOGIN_THRESHOLD = 0.50
+FACE_LOGIN_MARGIN = 0.05
 
 # =========================
 # OTP HELPER
@@ -266,6 +272,164 @@ def register():
         "message": "Register berhasil. Kode OTP telah dikirim ke email",
         "email": email
     }), 201
+
+
+# =========================
+# REGISTER WITH FACE
+# =========================
+@auth_bp.route('/register-with-face', methods=['POST'])
+def register_with_face():
+
+    name = request.form.get("name")
+    email = request.form.get("email")
+    phone = request.form.get("phone")
+    password = request.form.get("password")
+
+    # Untuk keamanan, role register biasa tetap user
+    role = "user"
+
+    if not name or not email or not phone or not password:
+        return jsonify({
+            "message": "Nama, email, nomor HP, dan password wajib diisi"
+        }), 400
+
+    existing_user = users.find_one({
+        "email": email
+    })
+
+    if existing_user:
+        return jsonify({
+            "message": "Email sudah digunakan"
+        }), 400
+
+    # Support multipart: face_images[]
+    face_images = request.files.getlist("face_images")
+
+    # Support juga format: face_image_1, face_image_2, face_image_3
+    if not face_images:
+        for i in range(1, 6):
+            file = request.files.get(f"face_image_{i}")
+            if file and file.filename != "":
+                face_images.append(file)
+
+    if len(face_images) < 3:
+        return jsonify({
+            "message": "Minimal 3 foto wajah wajib dikirim"
+        }), 400
+
+    pose_types = request.form.getlist("pose_types")
+
+    embedding_docs = []
+
+    try:
+        for index, face_file in enumerate(face_images):
+
+            if not face_file or face_file.filename == "":
+                return jsonify({
+                    "message": f"Foto wajah ke-{index + 1} tidak valid"
+                }), 400
+
+            embedding = generate_embedding_from_file(face_file)
+
+            pose_type = "unknown"
+
+            if index < len(pose_types):
+                pose_type = pose_types[index]
+            else:
+                pose_type = request.form.get(
+                    f"pose_type_{index + 1}",
+                    f"pose_{index + 1}"
+                )
+
+            embedding_docs.append({
+                "pose_type": pose_type,
+                "embedding": embedding,
+                "created_at": datetime.utcnow()
+            })
+
+    except ValueError as e:
+        return jsonify({
+            "message": str(e)
+        }), 400
+
+    except Exception as e:
+        print("REGISTER FACE ERROR:", e)
+        return jsonify({
+            "message": "Gagal memproses wajah"
+        }), 500
+
+    hashed_password = bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt()
+    )
+
+    user_data = {
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "password": hashed_password,
+        "role": role,
+        "vendor_status": None,
+        "bio": "",
+        "is_verified": False,
+        "login_provider": "local",
+        "face_registered": True,
+        "face_embedding_count": len(embedding_docs),
+        "created_at": datetime.utcnow()
+    }
+
+    try:
+        result = users.insert_one(user_data)
+        user_id = str(result.inserted_id)
+
+        for doc in embedding_docs:
+            doc["user_id"] = user_id
+
+        face_embeddings.insert_many(embedding_docs)
+
+        otp = generate_and_save_otp(
+            email=email,
+            purpose="register"
+        )
+
+        send_otp_email(
+            email=email,
+            name=name,
+            otp=otp,
+            purpose="register"
+        )
+
+        create_activity_log(
+            user_id=result.inserted_id,
+            email=email,
+            name=name,
+            role=role,
+            action="REGISTER_WITH_FACE"
+        )
+
+        return jsonify({
+            "message": "Register berhasil. Kode OTP telah dikirim ke email",
+            "email": email,
+            "face_registered": True,
+            "face_embedding_count": len(embedding_docs)
+        }), 201
+
+    except Exception as e:
+        print("REGISTER WITH FACE DB ERROR:", e)
+
+        if "result" in locals():
+            users.delete_one({
+                "_id": result.inserted_id
+            })
+
+            face_embeddings.delete_many({
+                "user_id": str(result.inserted_id)
+            })
+
+        return jsonify({
+            "message": "Register gagal"
+        }), 500
+
 
 # =========================
 # LOGIN (FIXED: MENGIRIM EVENT_ID DAN PHOTO_URL TERAKHIR USER)
@@ -607,6 +771,175 @@ def reset_password():
 
     return jsonify({
         "message": "Password berhasil direset"
+    }), 200
+
+
+# =========================
+# LOGIN FACE IDENTIFICATION 1:N
+# =========================
+@auth_bp.route('/login-face-identify', methods=['POST'])
+def login_face_identify():
+
+    face_image = request.files.get("face_image")
+
+    if not face_image:
+        face_image = request.files.get("image")
+
+    if not face_image or face_image.filename == "":
+        return jsonify({
+            "message": "Foto wajah wajib dikirim"
+        }), 400
+
+    try:
+        login_embedding = generate_embedding_from_file(face_image)
+
+    except ValueError as e:
+        return jsonify({
+            "message": str(e)
+        }), 400
+
+    except Exception as e:
+        print("LOGIN FACE PROCESS ERROR:", e)
+        return jsonify({
+            "message": "Gagal memproses wajah"
+        }), 500
+
+    all_embeddings = list(face_embeddings.find({}))
+
+    if not all_embeddings:
+        return jsonify({
+            "message": "Belum ada data wajah terdaftar"
+        }), 404
+
+    best_by_user = {}
+
+    for item in all_embeddings:
+        user_id = item.get("user_id")
+        stored_embedding = item.get("embedding")
+
+        if not user_id or not stored_embedding:
+            continue
+
+        similarity = cosine_similarity(
+            login_embedding,
+            stored_embedding
+        )
+
+        if user_id not in best_by_user:
+            best_by_user[user_id] = {
+                "user_id": user_id,
+                "similarity": similarity,
+                "pose_type": item.get("pose_type", "unknown")
+            }
+
+        elif similarity > best_by_user[user_id]["similarity"]:
+            best_by_user[user_id] = {
+                "user_id": user_id,
+                "similarity": similarity,
+                "pose_type": item.get("pose_type", "unknown")
+            }
+
+    ranked_users = sorted(
+        best_by_user.values(),
+        key=lambda x: x["similarity"],
+        reverse=True
+    )
+
+    if not ranked_users:
+        return jsonify({
+            "message": "Data wajah tidak valid"
+        }), 400
+
+    best_match = ranked_users[0]
+    best_score = best_match["similarity"]
+
+    second_score = 0.0
+
+    if len(ranked_users) > 1:
+        second_score = ranked_users[1]["similarity"]
+
+    if best_score < FACE_LOGIN_THRESHOLD:
+        return jsonify({
+            "message": "Wajah tidak cocok dengan akun mana pun",
+            "similarity": round(best_score, 4),
+            "threshold": FACE_LOGIN_THRESHOLD
+        }), 401
+
+    if len(ranked_users) > 1 and (best_score - second_score) < FACE_LOGIN_MARGIN:
+        return jsonify({
+            "message": "Wajah belum dapat dipastikan. Silakan coba lagi atau login manual",
+            "similarity": round(best_score, 4),
+            "second_similarity": round(second_score, 4)
+        }), 401
+
+    try:
+        matched_user_id = best_match["user_id"]
+
+        user = users.find_one({
+            "_id": ObjectId(matched_user_id)
+        })
+
+    except Exception:
+        return jsonify({
+            "message": "User hasil pencocokan tidak valid"
+        }), 500
+
+    if not user:
+        return jsonify({
+            "message": "User tidak ditemukan"
+        }), 404
+
+    if user.get("login_provider", "local") == "local" and user.get("is_verified") is False:
+        return jsonify({
+            "message": "Akun belum diverifikasi. Silakan verifikasi OTP terlebih dahulu"
+        }), 403
+
+    business_name = ""
+
+    if user.get("role") in ["vendor", "vendor_pending"]:
+        vendor = vendor_registrations.find_one({
+            "user_id": str(user["_id"])
+        })
+
+        if vendor:
+            business_name = vendor.get("business_name", "")
+
+    token = create_access_token(
+        identity=str(user["_id"])
+    )
+
+    create_activity_log(
+        user_id=user["_id"],
+        email=user["email"],
+        name=user["name"],
+        role=user.get("role", "user"),
+        action="LOGIN_FACE"
+    )
+
+    event_id_str = ""
+    last_event = db.events.find_one(
+        {"user_id": str(user["_id"])},
+        sort=[("_id", -1)]
+    )
+
+    if last_event:
+        event_id_str = str(last_event["_id"])
+
+    return jsonify({
+        "message": "Login wajah berhasil",
+        "token": token,
+        "user_id": str(user["_id"]),
+        "role": user["role"],
+        "vendor_status": user.get("vendor_status"),
+        "name": user["name"],
+        "email": user["email"],
+        "phone": user.get("phone", ""),
+        "business_name": business_name,
+        "event_id": event_id_str,
+        "photo_url": user.get("photo_url", ""),
+        "similarity": round(best_score, 4),
+        "second_similarity": round(second_score, 4),
+        "matched_pose": best_match.get("pose_type", "unknown")
     }), 200
 
 
@@ -996,6 +1329,255 @@ def register_vendor_direct():
         "name": name,
         "email": email
     }), 201
+
+
+# =========================
+# REGISTER VENDOR WITH FACE
+# =========================
+@auth_bp.route('/register-vendor-with-face', methods=['POST'])
+def register_vendor_with_face():
+
+    name = request.form.get("name")
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    business_name = request.form.get("business_name")
+    category = request.form.get("category")
+    description = request.form.get("description")
+    location = request.form.get("location")
+    phone = request.form.get("phone")
+
+    owner_name = request.form.get("owner_name")
+    nik = request.form.get("nik")
+    npwp = request.form.get("npwp")
+
+    ktp_image = request.files.get("ktp_image")
+    selfie_image = request.files.get("selfie_image")
+    business_license = request.files.get("business_license")
+
+    if not name or not email or not password:
+        return jsonify({
+            "message": "Nama, email, dan password wajib diisi"
+        }), 400
+
+    if not business_name or not category:
+        return jsonify({
+            "message": "Data bisnis wajib diisi"
+        }), 400
+
+    existing_user = users.find_one({
+        "email": email
+    })
+
+    if existing_user:
+        return jsonify({
+            "message": "Email sudah digunakan"
+        }), 400
+
+    # =========================
+    # AMBIL FOTO WAJAH
+    # =========================
+    face_images = request.files.getlist("face_images")
+
+    if not face_images:
+        face_images = request.files.getlist("face_images[]")
+
+    if not face_images:
+        for i in range(1, 6):
+            file = request.files.get(f"face_image_{i}")
+            if file and file.filename != "":
+                face_images.append(file)
+
+    face_images = [
+        file for file in face_images
+        if file and file.filename != ""
+    ]
+
+    if len(face_images) < 3:
+        return jsonify({
+            "message": "Minimal 3 foto wajah wajib dikirim"
+        }), 400
+
+    pose_types = request.form.getlist("pose_types")
+
+    if not pose_types:
+        pose_types = request.form.getlist("pose_types[]")
+
+    embedding_docs = []
+
+    try:
+        for index, face_file in enumerate(face_images):
+
+            embedding = generate_embedding_from_file(face_file)
+
+            if index < len(pose_types):
+                pose_type = pose_types[index]
+            else:
+                pose_type = request.form.get(
+                    f"pose_type_{index + 1}",
+                    f"pose_{index + 1}"
+                )
+
+            embedding_docs.append({
+                "pose_type": pose_type,
+                "embedding": embedding,
+                "created_at": datetime.utcnow()
+            })
+
+    except ValueError as e:
+        return jsonify({
+            "message": str(e)
+        }), 400
+
+    except Exception as e:
+        print("REGISTER VENDOR FACE ERROR:", e)
+        return jsonify({
+            "message": "Gagal memproses wajah vendor"
+        }), 500
+
+    hashed_password = bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt()
+    )
+
+    user_data = {
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "password": hashed_password,
+        "role": "vendor_pending",
+        "vendor_status": "pending",
+        "bio": "",
+        "is_verified": False,
+        "login_provider": "local",
+        "face_registered": True,
+        "face_embedding_count": len(embedding_docs),
+        "created_at": datetime.utcnow()
+    }
+
+    inserted_user_id = None
+    inserted_vendor_id = None
+
+    try:
+        result = users.insert_one(user_data)
+        inserted_user_id = result.inserted_id
+        user_id = str(inserted_user_id)
+
+        # =========================
+        # SIMPAN FILE DOKUMEN VENDOR
+        # =========================
+        ktp_filename = None
+        selfie_filename = None
+        license_filename = None
+
+        if ktp_image and ktp_image.filename != "":
+            file_extension = os.path.splitext(ktp_image.filename)[1]
+            ktp_filename = secure_filename(
+                f"ktp_{user_id}{file_extension}"
+            )
+            ktp_image.save(
+                os.path.join(UPLOAD_FOLDER, ktp_filename)
+            )
+
+        if selfie_image and selfie_image.filename != "":
+            file_extension = os.path.splitext(selfie_image.filename)[1]
+            selfie_filename = secure_filename(
+                f"selfie_{user_id}{file_extension}"
+            )
+            selfie_image.save(
+                os.path.join(UPLOAD_FOLDER, selfie_filename)
+            )
+
+        if business_license and business_license.filename != "":
+            file_extension = os.path.splitext(business_license.filename)[1]
+            license_filename = secure_filename(
+                f"business_license_{user_id}{file_extension}"
+            )
+            business_license.save(
+                os.path.join(UPLOAD_FOLDER, license_filename)
+            )
+
+        vendor_data = {
+            "user_id": user_id,
+
+            "business_name": business_name,
+            "category": category,
+            "description": description,
+            "location": location,
+            "phone": phone,
+
+            "owner_name": owner_name,
+            "nik": nik,
+            "npwp": npwp,
+
+            "ktp_image": ktp_filename,
+            "selfie_image": selfie_filename,
+            "business_license": license_filename,
+
+            "status": "pending",
+            "created_at": datetime.utcnow()
+        }
+
+        vendor_result = vendor_registrations.insert_one(vendor_data)
+        inserted_vendor_id = vendor_result.inserted_id
+
+        for doc in embedding_docs:
+            doc["user_id"] = user_id
+            doc["role"] = "vendor_pending"
+
+        face_embeddings.insert_many(embedding_docs)
+
+        otp = generate_and_save_otp(
+            email=email,
+            purpose="register"
+        )
+
+        send_otp_email(
+            email=email,
+            name=name,
+            otp=otp,
+            purpose="register"
+        )
+
+        create_activity_log(
+            user_id=user_id,
+            email=email,
+            name=name,
+            role="vendor_pending",
+            action="VENDOR_REGISTER_WITH_FACE"
+        )
+
+        return jsonify({
+            "message": "Pendaftaran vendor berhasil. Kode OTP telah dikirim ke email",
+            "role": "vendor_pending",
+            "vendor_status": "pending",
+            "name": name,
+            "email": email,
+            "business_name": business_name,
+            "face_registered": True,
+            "face_embedding_count": len(embedding_docs)
+        }), 201
+
+    except Exception as e:
+        print("REGISTER VENDOR WITH FACE DB ERROR:", e)
+
+        if inserted_user_id:
+            users.delete_one({
+                "_id": inserted_user_id
+            })
+
+            face_embeddings.delete_many({
+                "user_id": str(inserted_user_id)
+            })
+
+        if inserted_vendor_id:
+            vendor_registrations.delete_one({
+                "_id": inserted_vendor_id
+            })
+
+        return jsonify({
+            "message": "Pendaftaran vendor gagal"
+        }), 500
 
 # =========================
 # SAVE FCM TOKEN

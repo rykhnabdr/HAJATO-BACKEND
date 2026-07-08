@@ -1,9 +1,9 @@
-import os  # 🟢 WAJIB: Untuk manajemen folder upload biner foto asli
+import os  # WAJIB: Untuk manajemen folder upload biner foto asli
 import time
 from flask import request, jsonify
 from bson.objectid import ObjectId
 from werkzeug.utils import secure_filename
-# 🟢 FIX: Menambahkan url_for pada baris import Flask utama
+# FIX: Menambahkan url_for pada baris import Flask utama
 from flask import Flask, render_template, request, redirect, session, jsonify, send_from_directory, url_for
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -24,7 +24,7 @@ from bson import ObjectId
 from routes.banner_routes import banner_bp
 
 # ========================================================
-# 🟢 TAMBAHAN TAMU & ACARA: Import Blueprint Event Baru
+# TAMBAHAN TAMU & ACARA: Import Blueprint Event Baru
 # ========================================================
 from routes.event_routes import event_bp
 
@@ -79,7 +79,7 @@ app.register_blueprint(banner_bp)
 app.register_blueprint(chat_bp)
 
 # ========================================================
-# 🟢 TAMBAHAN TAMU & ACARA: Daftarkan Blueprint Event API
+# TAMBAHAN TAMU & ACARA: Daftarkan Blueprint Event API
 # ========================================================
 app.register_blueprint(event_bp, url_prefix="/api/events")
 
@@ -195,7 +195,7 @@ def dashboard():
         })
 
 # ==========================================
-# 🟢 DATA GRAFIK LAYANAN TOP 5 (UNTUK GRAFIK BARU)
+# DATA GRAFIK LAYANAN TOP 5 (UNTUK GRAFIK BARU)
 # ==========================================
     pipeline_chart = [
         {
@@ -920,7 +920,7 @@ def activity_logs_page():
     )
 
 # ==============================================================================
-#  🟢 ROUTE MEMBUKA UNDANGAN DIGITAL (FIX CLEAN & DINAMIS MURNI ALL TEMPLATE)
+#  ROUTE MEMBUKA UNDANGAN DIGITAL (FIX CLEAN & DINAMIS MURNI ALL TEMPLATE)
 # ==============================================================================
 @app.route('/api/events/rsvp/<event_id>', methods=['GET'])
 def render_rsvp_page(event_id):
@@ -956,7 +956,7 @@ def render_rsvp_page(event_id):
 
 
 # ==============================================================================
-# 🟢 ROUTE: Menangani Pengiriman Form Doa Tamu Secara Asinkron (JSON)
+# ROUTE: Menangani Pengiriman Form Doa Tamu Secara Asinkron (JSON)
 # ==============================================================================
 @app.route('/api/events/rsvp/<event_id>/comment', methods=['POST'])
 def submit_comment(event_id):
@@ -983,7 +983,7 @@ def submit_comment(event_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # ==============================================================================
-# 🟢 ENDPOINT STATS DASHBOARD FIXED PER ACARA (SINKRON DATA VENDOR)
+# ENDPOINT STATS DASHBOARD FIXED PER ACARA (SINKRON DATA VENDOR)
 # ==============================================================================
 @app.route('/api/dashboard/stats', methods=['GET'])
 def get_dashboard_stats():
@@ -994,7 +994,7 @@ def get_dashboard_stats():
         nama_acara_aktif = "Aplikasi Hajato" 
         is_fallback_active = False
 
-        # ── 🟢 1. VALIDASI & KUNCI FILTER UTAMA PER ACARA ──
+        # ── 1. VALIDASI & KUNCI FILTER UTAMA PER ACARA ──
         if event_id_str and event_id_str.strip() != "" and ObjectId.is_valid(event_id_str):
             query_filter = {"event_id": ObjectId(event_id_str)}
             
@@ -1015,7 +1015,7 @@ def get_dashboard_stats():
             # Jika memori HP bener-bener kosong/belum milih acara
             is_fallback_active = True
 
-        # ── 🟢 2. HITUNG DATA TAMU MURNI PER ACARA (SINKRON TIDAK GLOBAL) ──
+        # ── 2. HITUNG DATA TAMU MURNI PER ACARA (SINKRON TIDAK GLOBAL) ──
         if is_fallback_active:
             total_guest = db.guests.count_documents({})
             tamu_hadir = db.guests.count_documents({"status": "attended"})
@@ -1030,7 +1030,7 @@ def get_dashboard_stats():
 
         tamu_checkin = tamu_hadir
 
-        # ── 🟢 3. AMBIL DATA VENDOR PER ACARA (SUDAH FIX) ──
+        # ── 3. AMBIL DATA VENDOR PER ACARA (SUDAH FIX) ──
         vendors_list = []
         try:
             if not is_fallback_active:
@@ -1045,7 +1045,7 @@ def get_dashboard_stats():
         except Exception as e:
             print(f"[ERROR VENDOR DASHBOARD STATS]: {str(e)}")
             
-        # ── 🟢 4. AMBIL DATA AKTIVITAS MURNI PER ACARA DARI COLLECTION ASLI ──
+        # ── 4. AMBIL DATA AKTIVITAS MURNI PER ACARA DARI COLLECTION ASLI ──
         activities_list = []
         try:
             # Ganti dari db.logs ke db.activity_logs (Sesuai collection log lo, Han)
@@ -1091,7 +1091,7 @@ def get_dashboard_stats():
     
 
 # ==============================================================================
-# 🟢 ROUTE BARU: API TOTAL LAYANAN & LAYANAN TERBANYAK (DASHBOARD ADMIN WEB)
+# ROUTE BARU: API TOTAL LAYANAN & LAYANAN TERBANYAK (DASHBOARD ADMIN WEB)
 # ==============================================================================
 @app.route('/api/stats/services', methods=['GET'])
 def get_service_stats_web():
@@ -1283,9 +1283,10 @@ def get_youtube_summary():
         # Menghitung seluruh video
         total_video = db.youtube_vendor.count_documents(video_query)
 
-        # ==============================================================
-        # ANALISIS JUMLAH VIDEO PER KATEGORI
-        # ==============================================================
+# ==============================================================
+# ANALISIS JUMLAH VIDEO PER KATEGORI
+# ==============================================================
+
         pipeline_kategori = [
             {
                 "$match": video_query
@@ -1337,6 +1338,7 @@ def get_youtube_summary():
         ]
 
         hasil_kategori = list(db.youtube_vendor.aggregate(pipeline_kategori))
+
         category_stats = []
 
         for item in hasil_kategori:
@@ -1344,6 +1346,123 @@ def get_youtube_summary():
                 "kategori": item.get("_id", "Tidak diketahui"),
                 "jumlah": item.get("jumlah", 0)
             })
+
+# ==============================================================
+# ANALISIS TREND MODEL HAJATAN
+#
+# Menghitung kemunculan kata kunci model / tema hajatan
+# berdasarkan clean_title dan clean_description
+# ==============================================================
+
+        trend_keywords = [
+            {
+                "model": "modern",
+                "keywords": ["modern"]
+            },
+            {
+                "model": "mewah",
+                "keywords": ["mewah", "luxury", "glamour", "glamor"]
+            },
+            {
+                "model": "elegan",
+                "keywords": ["elegan", "elegant"]
+            },
+            {
+                "model": "minimalis",
+                "keywords": ["minimalis", "minimalist"]
+            },
+            {
+                "model": "sederhana",
+                "keywords": ["sederhana", "simple", "simpel"]
+            },
+            {
+                "model": "outdoor",
+                "keywords": ["outdoor", "luar ruangan"]
+            },
+            {
+                "model": "indoor",
+                "keywords": ["indoor", "dalam ruangan"]
+            },
+            {
+                "model": "garden",
+                "keywords": ["garden", "taman"]
+            },
+            {
+                "model": "tradisional",
+                "keywords": ["tradisional", "adat", "jawa", "sunda"]
+            },
+            {
+                "model": "pelaminan",
+                "keywords": ["pelaminan"]
+            },
+            {
+                "model": "dekorasi",
+                "keywords": ["dekorasi", "decoration", "decor"]
+            },
+            {
+                "model": "catering",
+                "keywords": ["catering", "katering"]
+            }
+        ]
+
+        trend_counter = {}
+
+        for trend in trend_keywords:
+            trend_counter[trend["model"]] = 0
+
+        video_cursor = db.youtube_vendor.find(
+            video_query,
+            {
+                "_id": 0,
+                "title": 1,
+                "description": 1,
+                "clean_title": 1,
+                "clean_description": 1
+            }
+        )
+
+        for video in video_cursor:
+            clean_title = video.get("clean_title", "")
+            clean_description = video.get("clean_description", "")
+
+            # Fallback jika data lama belum punya clean_title / clean_description
+            if not clean_title:
+                clean_title = video.get("title", "")
+
+            if not clean_description:
+                clean_description = video.get("description", "")
+
+            combined_text = f"{clean_title} {clean_description}".lower()
+
+            for trend in trend_keywords:
+                model = trend["model"]
+                keywords = trend["keywords"]
+
+                # Satu video dihitung satu kali untuk satu model
+                if any(keyword in combined_text for keyword in keywords):
+                    trend_counter[model] += 1
+
+        trend_stats = []
+
+        for model, jumlah in trend_counter.items():
+            if jumlah > 0:
+                trend_stats.append({
+                    "model": model,
+                    "jumlah": jumlah
+                })
+
+        trend_stats = sorted(
+            trend_stats,
+            key=lambda item: item["jumlah"],
+            reverse=True
+        )
+
+        # Ambil maksimal 8 trend teratas agar grafik tidak terlalu panjang
+        trend_stats = trend_stats[:8]
+
+        # ==============================================================
+        # LAST UPDATE
+        # ==============================================================
 
         latest_document = db.youtube_vendor.find_one(
             {
@@ -1355,12 +1474,16 @@ def get_youtube_summary():
         )
 
         last_update = None
+
         if latest_document:
             waktu = latest_document.get("last_collected_at")
+
             if waktu:
                 last_update = waktu.isoformat()
 
-        total_data_kategori = sum(item["jumlah"] for item in category_stats)
+        total_data_kategori = sum(
+            item["jumlah"] for item in category_stats
+        )
 
         return jsonify({
             "status": "success",
@@ -1369,12 +1492,14 @@ def get_youtube_summary():
                 "total_kategori": len(category_stats),
                 "total_data_kategori": total_data_kategori,
                 "last_update": last_update,
-                "category_stats": category_stats
+                "category_stats": category_stats,
+                "trend_stats": trend_stats
             }
         }), 200
 
     except Exception as e:
         print(f"[ERROR YOUTUBE SUMMARY]: {str(e)}")
+
         return jsonify({
             "status": "error",
             "message": "Gagal mengambil ringkasan insight",
@@ -1383,12 +1508,12 @@ def get_youtube_summary():
                 "total_kategori": 0,
                 "total_data_kategori": 0,
                 "last_update": None,
-                "category_stats": []
+                "category_stats": [],
+                "trend_stats": []
             }
         }), 500
-
 # ==============================================================================
-# 🟢 HALAMAN WEB ADMIN BANNER (SINKRON DATA LIST UNTUK FORM EDIT & HAPUS)
+# HALAMAN WEB ADMIN BANNER (SINKRON DATA LIST UNTUK FORM EDIT & HAPUS)
 # ==============================================================================
 @app.route('/admin/banners')
 def banners_page():
