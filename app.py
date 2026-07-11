@@ -55,16 +55,9 @@ app.config["JWT_SECRET_KEY"] = settings.JWT_SECRET_KEY
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 
-# ── 🟢 KODE BARU (Memaksa tipe data int dan boolean yang benar) ───────
 app.config["MAIL_SERVER"] = settings.MAIL_SERVER
-
-# 1. Memastikan port dibaca sebagai Integer angka resmi Flask
-app.config["MAIL_PORT"] = int(settings.MAIL_PORT) if settings.MAIL_PORT else 587
-
-# 2. Memastikan TLS bernilai Boolean True jika berisi teks 'true', 'True', atau boolean True
-mail_tls_env = settings.MAIL_USE_TLS
-app.config["MAIL_USE_TLS"] = str(mail_tls_env).lower() in ['true', '1', 'yes']
-
+app.config["MAIL_PORT"] = settings.MAIL_PORT
+app.config["MAIL_USE_TLS"] = settings.MAIL_USE_TLS
 app.config["MAIL_USERNAME"] = settings.MAIL_USERNAME
 app.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 app.config["MAIL_DEFAULT_SENDER"] = settings.MAIL_USERNAME

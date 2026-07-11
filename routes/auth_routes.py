@@ -174,7 +174,6 @@ HAJATO
 </html>
 """
 
-   # ── 🟢 GANTI KODE PALING BAWAHNYA MENJADI SEPERTI INI ───────
     msg = Message(
         subject=subject,
         sender=("HAJATO", "hajato.app@gmail.com"),
@@ -183,13 +182,7 @@ HAJATO
         html=html_body
     )
 
-    # Membungkus pengiriman dengan try-except agar jika SMTP cloud timeout, Flask TIDAK gantung
-    try:
-        mail.send(msg)
-        print(f"[MAIL SUCCESS] ✉️ OTP asli berhasil dikirim ke {email}")
-    except Exception as mail_error:
-        print(f"\n[MAIL CRASH WARNING] ⚠️ Gagal kirim email asli tapi alur diselamatkan: {str(mail_error)}\n")
-        # Kode tetap jalan terus tanpa membuat loading Flutter lo muter-muter selamanya
+    mail.send(msg)
 
 
 # =========================
